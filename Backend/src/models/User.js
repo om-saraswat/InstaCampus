@@ -1,44 +1,60 @@
-const mongoose = require("mongoose")
-const validator = require("validator")
+const mongoose = require("mongoose");
+const validator = require("validator");
+const bcrypt = require("bcrypt");
 
-const UserSchema = mongoose.Schema({
-    name : {
-        type : String,
-        required : true,
-        minLength : 2,
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      minLength: 2,
     },
-    emailid : {
-        type : String,
-        required : true,
-        unique : true,
-        lowercase : true,
-        trim : true,
-        validate(input){
-            if(!validator.isEmail(input)){
-                throw new Error("Email is not Correct");
-            }
-        }
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      validate: {
+        validator: (input) => validator.isEmail(input),
+        message: "Email is not correct",
+      },
     },
-    password : {
-        type : String,
-        required : true,
-        validate(input){
-            if(!validator.isStrongPassword(input)){
-                throw new Error("Password is not strong enough ")
-            }
-        }
+    password: {
+      type: String,
+      required: function () {
+        return this.role !== "student"; // Students (OAuth) don’t need password
+      },
+      validate: {
+        validator: function (input) {
+          if (this.role !== "student" && !validator.isStrongPassword(input)) {
+            return false;
+          }
+          return true;
+        },
+        message: "Password is not strong enough",
+      },
     },
-    role : {
-        type : String,
-        required : true,
-        enum : {
-            values: ["student","admin" ,"vendor"],
-            message : "{VALUE} is not valid role type"
-        }
-    }
+    role: {
+      type: String,
+      required: true,
+      enum: {
+        values: ["student", "admin", "vendor"],
+        message: "{VALUE} is not valid role type",
+      },
+    },
+  },
+  { timestamps: true }
+);
 
-},{Timestamp:true});
+// Hash password before save
+UserSchema.pre("save", async function (next) {
+  if (this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  next();
+});
 
-const userModel = mongoose.model("user",UserSchema);
+const UserModel = mongoose.model("User", UserSchema);
 
-module.exports = userModel
+module.exports = UserModel;
