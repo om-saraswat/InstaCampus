@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const validator = require("validator");
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -10,10 +10,11 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       enum: {
-        values: ["stationary", "Xeros", "Food and Drinks"],
+        values: ["stationary","canteen"],
         message: "{VALUE} is not a valid product type",
       },
       required: true,
+      unique: true,
     },
     description: {
       type: String,
@@ -28,14 +29,20 @@ const productSchema = new mongoose.Schema(
         }
       },
     },
-    imgUrl :{
-        type : String,
-        required : true,
-        validate(input){
-            if(validator.isURL(input)){
-                throw new Error("Image URL is not valid")
-            }       
+    imgUrl: {
+      type: String,
+      required: true,
+      validate(input) {
+        if (
+          !validator.isURL(input, {
+            protocols: ["http", "https"],
+            require_protocol: true,
+            require_tld: false,
+          })
+        ) {
+          throw new Error("Image URL is not valid");
         }
+      },
     },
     lowStockThreshold: {
       type: Number,
