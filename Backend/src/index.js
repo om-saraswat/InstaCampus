@@ -30,7 +30,11 @@ app.use("/cart",cartRouter);
 const vendorRouter = require("./router/vendorRouter");
 app.use("/vendor",vendorRouter);
 
-
+const cors = require("cors");
+app.use(cors({
+  origin: "http://localhost:3000", // frontend URL
+  credentials: true
+}));
 
 
 const PORT = process.env.PORT || 5000;
