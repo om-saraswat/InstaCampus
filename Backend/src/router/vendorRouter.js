@@ -1,5 +1,4 @@
 const express = require("express");
-const { Trophy } = require("lucide-react");
 const { vendorauth } = require("../middleware/auth");
 const router = express.Router();
 const Order = require("../models/Order");
