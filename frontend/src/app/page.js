@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div>
       <h1 className="m-2">
-        hi this is the app right now !!!
+        Welcome to InstaCampus
       </h1>
     </div>
   );
