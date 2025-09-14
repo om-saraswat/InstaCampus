@@ -3,7 +3,7 @@ const { userAuth, vendorauth } = require("../middleware/auth");
 const router = express.Router();
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
-
+const product = require("../models/Product");
 // POST /cart/add/:category
 router.post("/cart/add/:category", userAuth, async (req, res) => {
     const userId = req.user._id;
@@ -92,7 +92,9 @@ router.get("/",userAuth, async (req, res) => {
         .populate("userId", "name email");
 
     res.json(orders);
+
 });
+
 router.get("/:id",userAuth, async (req, res) => {
     try{
         const order = await Order.findById(req.params.id)
@@ -108,6 +110,27 @@ router.get("/:id",userAuth, async (req, res) => {
     }
     
 });
+router.patch("/cancel/:id", userAuth, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) throw new Error("Order not found");
+
+        if (order.userId.toString() !== req.user._id.toString()) {
+            throw new Error("You can only cancel your own orders");
+        }
+
+        if (order.orderStatus === "ready" || order.orderStatus === "completed") {
+            throw new Error("Only orders with status 'ready and completed' can be cancelled");
+        }
+
+        order.orderStatus = "cancelled";
+        await order.save();
+
+        res.json({ order, message: "Order cancelled successfully" });
+    } catch (Err) {
+        res.status(400).send("Error Occurred: " + Err.message);
+    }
+});
 
 router.patch("/:id/:status",vendorauth, async (req, res) => {
     try{
@@ -116,32 +139,17 @@ router.patch("/:id/:status",vendorauth, async (req, res) => {
             throw new Error("Order not found");
         }
         const {status} = req.body;
-        order.status = status;
+        order.orderStatus = status;
         await order.save();
-        res.json({order,message : "Order status updated"});
+        res.status(200).json({order,message : "Order status updated"});
     }
     catch(Err){
         res.status(400).send("Error Occured" + Err);
     }
     
 });
-router.patch("/cancel/:id",userAuth, async (req, res) => {
-    try{
-        const order = await Order.findById(req.params.id);
-        if(!order){
-            throw new Error("Order not found");
-        }
-        if(order.userId.toString() !== req.user._id.toString()){
-            throw new Error("You can only cancel your own orders");
-        }
-        if(order.status === "Placed" || order.status === "prepared"){
-            throw new Error("Only orders with status 'Placed' can be cancelled");
-        }
-        order.status = "Cancelled";
-        await order.save();
-        res.json({order,message : "Order cancelled successfully"});
-    }
-    catch(Err){
-        res.status(400).send("Error Occured" + Err);
-    }});
+
+
+
+
 module.exports = router;
