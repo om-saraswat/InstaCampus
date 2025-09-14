@@ -23,6 +23,16 @@ app.use("/product",productRouter);
 
 const orderRouter = require("./router/orderRouter");
 app.use("/order",orderRouter);
+
+const cartRouter = require("./router/cartRouter");
+app.use("/cart",cartRouter);
+
+const vendorRouter = require("./router/vendorRouter");
+app.use("/vendor",vendorRouter);
+
+
+
+
 const PORT = process.env.PORT || 5000;
 
 connectdb()

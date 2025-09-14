@@ -14,7 +14,6 @@ const productSchema = new mongoose.Schema(
         message: "{VALUE} is not a valid product type",
       },
       required: true,
-      unique: true,
     },
     description: {
       type: String,
