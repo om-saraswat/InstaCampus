@@ -29,8 +29,8 @@ const vendorauth = async(req,res,next) =>{
         if(!user){
             throw new Error("User not found");
         }
-        if(user.role === "student"){
-            throw new Error("student can not access");
+        if(user.role === "student" || user.role === "admin"){
+            throw new Error(`${user.role} can not access`);
         }
         req.user = user;
         next();
