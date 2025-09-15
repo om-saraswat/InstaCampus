@@ -1,12 +1,19 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
+const Order = require('./Order'); // Import Order model
 
 const printingOrderSchema = new mongoose.Schema({
-    orderid :{
+    userId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "User", 
+        required: true 
+    },
+    orderid : {
         type : mongoose.Schema.Types.ObjectId,
         ref : "Order",
         required : true,
     },
-    fileUrl :{
+    fileUrl : {
         type : String,
         required : true,
         validate(input){
@@ -15,49 +22,14 @@ const printingOrderSchema = new mongoose.Schema({
             }       
         }
     },
-    numberOfPages : { 
-        type : Number,
-        required : true,
-        min : 1,
-    },
-    color : {
-        type : Boolean,
-        default : false,
-    },
-    copies : {
-        type : Number,
-        required : true,
-        default : 1,
-    },
-    side : {
-        type : String,
-        enum : {
-            values : ["single", "double"],
-            message : "{VALUE} is not a valid side option"
-        },
-        default : "single", 
-    },
-    paperSize : {
-        type : String,
-        enum : {
-            values : ["A4", "A3"],
-            message : "{VALUE} is not a valid paper size"
-        },
-        required : true,
-    },
-    binding : {
-        type : String,
-        enum : {
-            values : ["none", "spiral","stapled","hard","thermal"],
-            message : "{VALUE} is not a valid binding option"
-        },
-        default : "none",   
-    },
-    instruction : {
-        type : String,
-        maxlength : 500,
-    }
-}, {timestamps:true});
+    numberOfPages : { type : Number, required : true, min : 1 },
+    color : { type : Boolean, default : false },
+    copies : { type : Number, required : true, default : 1 },
+    side : { type : String, enum : ["single", "double"], default : "single" },
+    paperSize : { type : String, enum : ["A4", "A3"], required : true },
+    binding : { type : String, enum : ["none", "spiral","stapled","hard","thermal"], default : "none" },
+    instruction : { type : String, maxlength : 500 }
+}, { timestamps:true });
 
 const PrintingOrder = mongoose.model('PrintingOrder', printingOrderSchema);
 
