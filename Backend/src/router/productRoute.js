@@ -14,6 +14,8 @@ router.post("/",vendorauth,async(req,res) => {
         if(req.user.role === "stationary-vendor" && category !== "stationary" && category !== "Xeros"){
             throw new Error("Stationary vendor can only add stationary and Xeros category products");
         }
+        
+        
 
         const product = new Product({
             name,

@@ -40,6 +40,9 @@ app.use("/cart", cartRouter);
 const vendorRouter = require("./router/vendorRouter");
 app.use("/vendor", vendorRouter);
 
+const inventoryRouter = require("./router/inventoryrouter");
+app.use("/inventory", inventoryRouter);
+
 const PORT = process.env.PORT || 5000;
 
 connectdb()

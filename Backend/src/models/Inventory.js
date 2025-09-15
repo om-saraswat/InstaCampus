@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const inventorySchema = new mongoose.Schema({
-    productid :{
+    productId :{
         type : mongoose.Schema.Types.ObjectId,
         ref : "Product",
         required : true,
@@ -15,10 +15,8 @@ const inventorySchema = new mongoose.Schema({
         type : Date,
         default : Date.now,
     }
-},{timestamps:true});
+},{timestamps:true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }});
 
-module.exports = mongoose.model("Inventory",inventorySchema,{
-    toJSON : {
-        virtuals : true,    
-    }
-})
+module.exports = mongoose.model("Inventory",inventorySchema)

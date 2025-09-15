@@ -7,6 +7,11 @@ const productSchema = new mongoose.Schema(
       required: true,
       minlength: 2,
     },
+    vendorid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     category: {
       type: String,
       enum: {
