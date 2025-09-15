@@ -1,41 +1,29 @@
 # Instacampus - Online Canteen & Stationary Ordering System
 
 ## 📌 What We Do
-Instacampus is a digital platform designed to simplify food and stationary ordering for students and staff inside campuses.  
-It provides:
-- Online ordering of **canteen food & drinks**
-- Easy access to **stationary & Xerox services**
-- **Vendor-specific portals** for managing inventory and products
-- **User authentication & role-based access**
+Instacampus is a platform that digitizes campus ordering, making it simple for students and vendors to interact.  
+Students can:
+- Order **canteen food & drinks**
+- Buy **stationary or request Xerox/printing services**
+
+Vendors can:
+- Manage **inventory, products, and orders**
+- Track **sales, restocking, and order statuses**
 
 ---
 
 ## 💡 Why We Do
-Traditional campus ordering systems are inefficient:
-- Students wait in long queues
-- Vendors face mismanagement of stock
-- Limited visibility of demand leads to wastage or stock-outs  
-
-👉 Instacampus solves these problems by:
-- Allowing **pre-ordering** of food and stationary
-- Enabling vendors to **track sales and manage inventory**
-- Providing **students a faster and convenient experience**
+- **For Students:** Avoid queues, save time, and access campus services from anywhere.  
+- **For Vendors:** Automate order management, reduce manual errors, and get real-time stock insights.  
+- **For Campus:** Build a sustainable, tech-driven ecosystem.  
 
 ---
 
 ## ⚙️ How We Do
-We built Instacampus using the **MERN stack** with a focus on modular API design.
-
-- **Authentication:** Secure signup, login, logout with JWT and bcrypt  
-- **Role-based Access:**  
-  - Students (place orders)  
-  - Vendors (canteen & stationary management)  
-  - Admins (system oversight)  
-- **Routers:**  
-  - **Auth Router:** Handles signup, login, logout  
-  - **Cart Router:** Manage user carts (canteen / stationary separately)  
-  - **User Router:** Manage user profile  
-  - **Product Router:** Add, update, delete, view products  
+- **Backend:** Node.js, Express.js, MongoDB (Mongoose ODM)  
+- **Authentication:** JWT + bcrypt (role-based access: student, canteen-vendor, stationary-vendor, admin)  
+- **Routers:** Modular design for scalability  
+- **Frontend:** Built with React (or Next.js) for real-time ordering & vendor dashboards  
 
 ---
 
@@ -44,78 +32,127 @@ We built Instacampus using the **MERN stack** with a focus on modular API design
 ### 1️⃣ Auth Router (`/auth`)
 Handles **user authentication**.
 
-- **POST `/signup`** → Register a new user  
-- **POST `/login`** → Login with email & password  
-  - Returns a JWT token (stored in cookie)  
-- **POST `/logout`** → Clears auth token  
-
-**Key Features:**
-- Passwords hashed with **bcrypt**
-- JWT-based **stateless authentication**
-- Role-based (student, canteen-vendor, stationary-vendor, admin)
+- `POST /signup` → Register user  
+- `POST /login` → Login user (JWT in cookie)  
+- `POST /logout` → Logout user  
 
 ---
 
 ### 2️⃣ Cart Router (`/cart`)
-Handles **cart operations per category** (canteen / stationary).
+Manage user carts.
 
-- **POST `/add/:category`** → Add item to cart  
-- **GET `/:category`** → View cart by category  
-- **POST `/clear/:category`** → Clear specific cart  
-
-**Key Features:**
-- Each user has **separate carts per category**  
-- Checks **inventory stock availability** before adding  
-- Prevents ordering beyond available stock  
+- `POST /add/:category` → Add product to cart  
+- `GET /:category` → Get cart items  
+- `POST /clear/:category` → Empty cart  
 
 ---
 
 ### 3️⃣ User Router (`/user`)
-Manages **user profile**.
+Manage profiles.
 
-- **GET `/`** → Get logged-in user profile (excluding password)  
-- **PATCH `/`** → Update name/password (re-authentication required)  
-
-**Key Features:**
-- Password re-hash handled in `User` model  
-- Clears token after profile update for security  
+- `GET /` → Get profile (excludes password)  
+- `PATCH /` → Update profile (name/password)  
 
 ---
 
 ### 4️⃣ Product Router (`/product`)
-Handles **product management** by vendors.
+Vendor product management.
 
-- **POST `/`** (Vendor Only) → Add product  
-- **GET `/`** (User) → Get all products  
-- **GET `/:id`** → Get product by ID  
-- **PATCH `/:id`** (Vendor Only) → Update product  
-- **DELETE `/:id`** (Vendor Only) → Delete product  
-- **GET `/category/:category`** (User) → Get products by category  
+- `POST /` (Vendor) → Add product  
+- `GET /` (User) → Get all products  
+- `GET /:id` (User) → Get product by ID  
+- `PATCH /:id` (Vendor) → Update product  
+- `DELETE /:id` (Vendor) → Delete product  
+- `GET /category/:category` (User) → Products by category  
 
-**Key Features:**
-- Vendor role restrictions:  
-  - **Canteen vendors** → Only *Food and Drinks*  
-  - **Stationary vendors** → Only *Stationary & Xeros*  
-- Products linked with **low stock threshold alerts**
+⚠️ **Vendor Restrictions:**  
+- Canteen vendors → Only *Food and Drinks*  
+- Stationary vendors → Only *Stationary* & *Xeros*  
+
+---
+
+### 5️⃣ Vendor Order Router (`/vendor/orders`)
+Vendors manage and view customer orders.
+
+- `GET /orders` → Get all vendor orders (filtered by category)  
+- `GET /recent/orders` → Get recent pending/confirmed/preparing/ready orders  
+- `PATCH /order/:status/:id` → Update order status (pending → confirmed → preparing → ready → completed / cancelled)  
+
+---
+
+### 6️⃣ Printing Orders Router (`/print`)
+Special route for Xerox/printing services.
+
+- `POST /print-order` → Create a printing order + linked order  
+- `GET /print-order/:id` → Fetch a specific printing order  
+
+💡 **Features:**
+- Calculates price based on pages, copies, color, etc.  
+- Creates a normal `Order` entry alongside `PrintingOrder`.  
+
+---
+
+### 7️⃣ Orders Router (`/orders`)
+Manages user orders (canteen/stationary).
+
+- `POST /from-cart/:category` → Convert cart → Order  
+- `GET /` → Get all orders for logged-in user  
+- `GET /:id` → Get a specific order  
+- `PATCH /cancel/:id` → Cancel an order & restore inventory  
+
+---
+
+### 8️⃣ Inventory Router (`/inventory`)
+Vendors manage product stock.
+
+- `GET /` → View vendor inventory  
+- `PATCH /:id/restock` → Increase stock  
+- `PATCH /:id/deduct` → Deduct stock  
+
+---
+
+## 🎨 Frontend Overview
+The **frontend** is built to provide a seamless experience for both students and vendors.
+
+### Student Portal
+- **Browse products** by category (canteen, stationary, Xerox)  
+- **Add to cart & place orders**  
+- **Track order status** (pending → confirmed → ready → completed)  
+- **View history & invoices**  
+
+### Vendor Dashboard
+- **Add & manage products**  
+- **View orders in real-time**  
+- **Update order statuses** (for preparation & delivery)  
+- **Manage inventory stock (restock/deduct)**  
+
+### Tech Choices
+- **Framework:** React.js / Next.js  
+- **Styling:** Tailwind CSS + shadcn/ui  
+- **State Management:** Redux Toolkit or React Query  
+- **API Calls:** Axios / Fetch to backend  
 
 ---
 
 ## 🛠️ Tech Stack
 - **Backend:** Node.js, Express.js  
-- **Database:** MongoDB (Mongoose ODM)  
-- **Authentication:** JWT + bcrypt + cookies  
-- **Frontend (planned):** React.js / Next.js  
+- **Database:** MongoDB  
+- **Authentication:** JWT, bcrypt  
+- **Frontend:** React / Next.js, Tailwind CSS  
+- **Deployment:** (planned) Docker + Cloud Hosting  
 
 ---
 
 ## 📌 Future Enhancements
-- Order tracking & notifications  
-- Payment gateway integration  
-- Analytics dashboard for vendors  
-- Mobile app version  
+- Payment gateway integration (UPI/PayPal/Stripe)  
+- Vendor analytics dashboard  
+- Push notifications (order ready, out-of-stock alerts)  
+- Mobile app (React Native / Flutter)  
 
 ---
 
 ## ✅ Summary
-Instacampus streamlines campus life by **digitizing food & stationary ordering**, ensuring **convenience for students** and **efficiency for vendors**.  
-Our modular **router-based API design** ensures scalability and maintainability.
+Instacampus connects **students, vendors, and campus services** into a single digital ecosystem.  
+From **canteen ordering** to **stationary & printing requests**, everything is unified for speed, efficiency, and convenience.  
+
+
