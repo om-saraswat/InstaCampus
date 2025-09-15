@@ -62,7 +62,7 @@ router.get("/recent/orders",vendorauth,async(req,res)=>{
       validStatuses.includes(order.orderStatus)
     );
     // Keep only orders where at least one item matched
-    const filteredOrders = orders.filter(order =>
+    const filteredOrders = recentOrders.filter(order =>
       order.items.some(item => item.productId) // only keep if product populated
     );
 
@@ -73,10 +73,10 @@ router.get("/recent/orders",vendorauth,async(req,res)=>{
   }
 });
 
-router.patch("/order/status/:id", vendorauth, async (req, res) => {
+router.patch("/order/:status/:id", vendorauth, async (req, res) => {
   try {
     const orderId = req.params.id;
-    const { status } = req.body;
+    const  status = req.params.status;
 
     // Validate status
     const validStatuses = ["pending", "confirmed", "preparing", "ready", "completed", "cancelled"];
@@ -85,15 +85,21 @@ router.patch("/order/status/:id", vendorauth, async (req, res) => {
     }
 
     // Find and update the order
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
-    }
 
-    // Check if the vendor is allowed to update this order
-    if (order.items.some(item => item.productId.category !== req.user.role.replace("-vendor", ""))) {
-      return res.status(403).json({ error: "You are not authorized to update this order" });
-    }
+
+    // Find and update the order
+const order = await Order.findById(orderId).populate("items.productId");
+if (!order) {
+  return res.status(404).json({ error: "Order not found" });
+}
+
+// Check if the vendor is allowed to update this order
+const vendorCategory = req.user.role.replace("-vendor", ""); // e.g. "stationary" or "canteen"
+const unauthorizedItem = order.items.some(item => item.productId.category !== vendorCategory);
+
+if (unauthorizedItem) {
+  return res.status(403).json({ error: "You are not authorized to update this order" });
+}
 
     order.orderStatus = status;
     await order.save();
