@@ -22,10 +22,10 @@ export default function RegisterPage() {
     setSuccess("");
 
     try {
-      const res = await api.post("/auth/register", form);
+      const res = await api.post("/auth/signup", form);
       setSuccess(res.data.message || "Registered successfully ✅");
     } catch (err) {
-      setError(err.response?.data?.error || "Something went wrong ❌");
+      setError(err.response?.data?.message || "Something went wrong ❌");
     }
   };
 
@@ -69,7 +69,8 @@ export default function RegisterPage() {
 
         <input
           type="text"
-          name="role" placeholder="Role (student/teacher)"
+          name="role"
+          placeholder="Role (student/teacher)"
           value={form.role}
           onChange={handleChange}
           className="w-full p-2 border rounded mb-4"
