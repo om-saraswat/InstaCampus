@@ -4,34 +4,46 @@ const Cart = require("../models/Cart");
 const { userAuth } = require("../middleware/auth");
 const Inventory = require("../models/Inventory");
 const mongoose = require("mongoose")
+const Product = require("../models/Product");
 
 
-router.post("/add/:category", userAuth, async (req, res) => {
+router.post("/add", userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
-        const category = req.params.category; // from URL
         const { productId, quantity } = req.body;
 
-        // Check if product exists in inventory
-       const inventoryItem = await Inventory.findOne({ 
-    productId: new mongoose.Types.ObjectId(productId) 
-});
+        // Find product (with vendor + category)
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ error: "Product not found" });
+        }
+
+        // Check inventory
+        const inventoryItem = await Inventory.findOne({ productId });
         if (!inventoryItem) {
             return res.status(404).json({ error: "Product not found in inventory" });
         }
-
-        
-
         if (inventoryItem.quantityAvailable < quantity) {
             return res.status(400).json({ error: `Only ${inventoryItem.quantityAvailable} units available` });
         }
 
-
-        let cart = await Cart.findOne({ userId, category });
+        // Find user's cart (now only one cart per category+vendor)
+        let cart = await Cart.findOne({ userId, category: product.category });
 
         if (!cart) {
-            cart = new Cart({ userId, category, items: [{ productId, quantity }] });
+            cart = new Cart({
+                userId,
+                category: product.category,
+                vendorId: product.vendorid,
+                items: [{ productId, quantity }]
+            });
         } else {
+            if (cart.vendorId && !cart.vendorId.equals(product.vendorid)) {
+                return res.status(400).json({
+                    error: "Your cart contains items from another vendor. Clear the cart to add items from a different vendor."
+                });
+            }
+
             const itemIndex = cart.items.findIndex(item => item.productId.equals(productId));
             if (itemIndex > -1) {
                 const newQuantity = cart.items[itemIndex].quantity + quantity;
@@ -41,6 +53,10 @@ router.post("/add/:category", userAuth, async (req, res) => {
                 cart.items[itemIndex].quantity = newQuantity;
             } else {
                 cart.items.push({ productId, quantity });
+            }
+
+            if (!cart.vendorId) {
+                cart.vendorId = product.vendorid;
             }
         }
 
@@ -52,29 +68,47 @@ router.post("/add/:category", userAuth, async (req, res) => {
     }
 });
 
-
-
-// GET /cart/:category
 router.get("/:category", userAuth, async (req, res) => {
-    const userId = req.user._id;
-    const category = req.params.category;
+    try {
+        const userId = req.user._id;
+        const category = req.params.category;
+        if (!["canteen", "stationary"].includes(category)) {
+            return res.status(400).json({ error: "Invalid category" });
+        }
+        const cart = await Cart.findOne({ userId, category })
+            .sort({ updatedAt: -1 }) 
+            .populate({
+                path: "items.productId",
+                select: "name price imgUrl vendorid category"
+            })
+            .populate("vendorId", "name email");
 
-    const cart = await Cart.findOne({ userId, category })
-        .populate("items.productId", "name price imgUrl");
+        if (!cart || cart.items.length === 0) {
+            return res.status(404).json({ error: "Cart is empty" });
+        }
 
-    if (!cart) return res.status(404).json({ error: "Cart is empty" });
-
-    res.json(cart);
+        res.json(cart);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 router.post("/clear/:category", userAuth, async (req, res) => {
-    const userId = req.user._id;
-    const category = req.params.category;
+    try {
+        const userId = req.user._id;
+        const category = req.params.category;
 
-    const cart = await Cart.findOne({ userId, category });
-    if (!cart) return res.status(404).json({ error: "Cart not found" });
-    cart.items = [];
-    await cart.save();
-    res.json({ message: `${category} cart cleared` });
+        const cart = await Cart.findOne({ userId, category });
+        if (!cart) {
+            return res.status(404).json({ error: "Cart not found" });
+        }
+        cart.items = [];
+        cart.vendorId = null; 
+        await cart.save();
+
+        res.json({ message: `${category} cart cleared` });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 module.exports = router;

@@ -27,6 +27,32 @@ router.get("/", vendorauth, async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+router.post("/",vendorauth,async(req,res) => {
+    try{
+        const {productId,quantity} = req.body;
+        const product = await Product.findById(productId);
+        if(!product){
+            throw new Error("Product not found");
+        }
+        if(req.user._id.toString() !== product.vendorid.toString()){
+            throw new Error("You are not authorized to add inventory for this product");
+        }
+        const existingInventory = await Inventory.findOne({ productId });
+        if (existingInventory) {
+            throw new Error("Inventory for this product already exists. Use restock endpoint to add stock.");
+        }
+        const inventoryItem = new Inventory({
+            productId,
+            quantityAvailable : quantity,
+            lastRestockedAT : new Date()
+        });
+        await inventoryItem.save();
+        res.status(201).json({inventoryItem,message : "Inventory added successfully"});
+    }
+    catch(Err){
+        res.status(400).json({error : Err.message});
+    }
+});
 router.patch("/:id/restock",vendorauth,async(req,res) => {
     try{
         const inventoryItem = await Inventory.findById(req.params.id);

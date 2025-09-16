@@ -3,6 +3,8 @@ const router = express.Router();
 const Product = require("../models/Product");
 const jwt = require("jsonwebtoken");
 const {vendorauth, userAuth}= require("../middleware/auth")
+const mongoose = require("mongoose"); 
+const Inventory = require("../models/Inventory");
 
 router.post("/",vendorauth,async(req,res) => {
     try{
@@ -23,7 +25,8 @@ router.post("/",vendorauth,async(req,res) => {
             description,
             price,
             imgUrl,
-            lowStockThreshold
+            lowStockThreshold,
+            vendorid : req.user._id
         });
         await product.save();
         res.status(201).json({product,message : "Product added successfully"});
@@ -31,18 +34,35 @@ router.post("/",vendorauth,async(req,res) => {
     catch(Err){
         res.status(400).send(Err);
     }
-})
-router.get("/",userAuth,async(req,res) => {
-    try{
-        const products = await Product.find({});
-        res.status(200).json({products});
+});
+
+router.get("/vendor/:vendorid", userAuth, async(req, res) => {
+    try {
+        const { vendorid } = req.params;
+        
+        if (!vendorid) {
+            return res.status(400).json({ error: "vendorid is required" });
+        }
+
+        const products = await Product.find({ vendorid: vendorid });
+
+        if (!products) {
+            return res.status(404).json({ message: "No products found for this vendor" });
+        }
+
+        res.status(200).json({ 
+            products, message: "Products retrieved successfully"
+        });
+        
+    } catch(err) {
+        console.error("Error in finding products:", err);
+        res.status(500).json({ error: "Internal server error: " + err.message });
     }
-    catch(err){
-        res.status(400).send("Error Occured" + err);
-    }
-})
+});
+
 router.get("/:id",userAuth,async(req,res) => {
     try{
+
         const product = await Product.findById(req.params.id);
         if(!product){
             throw new Error("Product not found");
@@ -53,18 +73,22 @@ router.get("/:id",userAuth,async(req,res) => {
         res.status(400).send("Error Occured" + err);
     }
 })
+
 router.patch("/:id",vendorauth,async(req,res) => {
     try{
         const product = await Product.findById(req.params.id);
         if(!product){
             throw new Error("Product not found");
         }
+        if(req.user._id.toString() !== product.vendorid.toString()){
+            throw new Error("You are not authorized to update this product");
+        }
         const {name,category,description,price,imgUrl,lowStockThreshold} = req.body;
         
-        if(req.user.role === "canteen-vendor" && category !== "Food and Drinks"){
+        if(req.user.role === "canteen-vendor" && category !== "canteen"){
             throw new Error("Canteen vendor can only add Food and Drinks category products");
         }
-        if(req.user.role === "stationary-vendor" && category !== "stationary" && category !== "Xeros"){
+        if(req.user.role === "stationary-vendor" && category !== "stationary"){
             throw new Error("Stationary vendor can only add stationary and Xeros category products");
         }
 
@@ -95,9 +119,13 @@ router.get("/category/:category",userAuth,async(req,res) => {
 router.delete("/:id",vendorauth,async(req,res) => {
     try{
         const product = await Product.findById(req.params.id);
+        if(req.user._id.toString() !== product.vendorid.toString()){
+            throw new Error("You are not authorized to delete this product");
+        }
         if(!product){
             throw new Error("Product not found");
         }
+        await Inventory.deleteOne({ productId: req.params.id });
         await Product.deleteOne({ _id: req.params.id });
 
     res.status(200).json({ message: "Product deleted successfully" });

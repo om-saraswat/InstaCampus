@@ -5,71 +5,80 @@ const Order = require("../models/Order");
 const Product = require("../models/Product");
 router.get("/orders", vendorauth, async (req, res) => {
   try {
-    const vendor = req.user;
-    let category;
-    if (vendor.role === "canteen-vendor") {
-      category = "canteen";
-    } else if (vendor.role === "stationary-vendor") {
-      category = "stationary";
-    } else {
-      throw new Error("Invalid vendor role");
-    }
+    const vendorId = req.user._id;
 
-    // Find all orders containing products in this category
+    // Get all products for this vendor
+    const vendorProducts = await Product.find({ vendorid: vendorId }, "_id");
+    const vendorProductIds = vendorProducts.map(p => p._id.toString());
+
+    // Get all orders
     const orders = await Order.find()
       .populate({
         path: "items.productId",
-        match: { category }, // filter products by category
-        select: "name price category",
+        select: "name price category vendorid",
       })
       .populate("userId", "name email");
 
-    // Keep only orders where at least one item matched
-    const filteredOrders = orders.filter(order =>
-      order.items.some(item => item.productId) // only keep if product populated
-    );
+    // Filter orders: only those with at least one item from this vendor
+    const filteredOrders = orders
+      .map(order => {
+        // Only keep items belonging to this vendor
+        const vendorItems = order.items.filter(
+          item => item.productId && vendorProductIds.includes(item.productId._id.toString())
+        );
+        if (vendorItems.length > 0) {
+          return {
+            ...order.toObject(),
+            items: vendorItems
+          };
+        }
+        return null;
+      })
+      .filter(order => order !== null);
 
     res.status(200).json({ orders: filteredOrders });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
-router.get("/recent/orders",vendorauth,async(req,res)=>{
-  try{
-    const user = req.user;
-    let category;
-    if(user.role==="canteen-vendor"){
-      category="canteen"
-    }
-    else if(user.role==="stationary-vendor"){
-      category="stationary"
-    }
-    else{
-      throw new Error("Invalid vendor role")
-    }
+router.get("/recent/orders", vendorauth, async (req, res) => {
+  try {
+    const vendorId = req.user._id;
+    const validStatuses = ["pending", "confirmed", "preparing", "ready"];
+
+    // Get all products for this vendor
+    const vendorProducts = await Product.find({ vendorid: vendorId }, "_id");
+    const vendorProductIds = vendorProducts.map(p => p._id.toString());
+
+    // Get all orders
     const orders = await Order.find()
-    .populate({
-      path: "items.productId",
-      match: { category }, // filter products by category
-      select: "name price category",
-    })
-    .populate("userId", "name email")
-    .sort({ createdAt: -1 })
+      .populate({
+        path: "items.productId",
+        select: "name price category vendorid",
+      })
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
 
-    const validStatuses = ["pending","confirmed","preparing","ready"];
-
-    const recentOrders = orders.filter(order => 
-      validStatuses.includes(order.orderStatus)
-    );
-    // Keep only orders where at least one item matched
-    const filteredOrders = recentOrders.filter(order =>
-      order.items.some(item => item.productId) // only keep if product populated
-    );
+    // Filter orders: only those with at least one item from this vendor and valid status
+    const filteredOrders = orders
+      .filter(order => validStatuses.includes(order.orderStatus))
+      .map(order => {
+        const vendorItems = order.items.filter(
+          item => item.productId && vendorProductIds.includes(item.productId._id.toString())
+        );
+        if (vendorItems.length > 0) {
+          return {
+            ...order.toObject(),
+            items: vendorItems
+          };
+        }
+        return null;
+      })
+      .filter(order => order !== null);
 
     res.status(200).json({ orders: filteredOrders });
-  }
-  catch(err){
-    res.status(400).json({error:err.message})
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 
