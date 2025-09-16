@@ -40,39 +40,75 @@ export default function LoginPage() {
         rememberMe,
       });
 
-      const { token, user, message } = res.data;
+      // Log the full response for debugging
+      console.log("Full API response:", res.data);
 
-      if (rememberMe) {
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
+      // Handle different possible response structures
+      let token, user, message;
+      if (res.data.token && res.data.user) {
+        ({ token, user, message } = res.data);
+      } else if (res.data.data && res.data.data.token && res.data.data.user) {
+        ({ token, user, message } = res.data.data);
+      } else if (res.data.success && (res.data.token || res.data.jwt)) {
+        token = res.data.token || res.data.jwt;
+        user = res.data.user || { role: "student" };
+        message = res.data.message;
+      } else if (res.data.jwt) {
+        token = res.data.jwt;
+        user = res.data.user || { role: "student" };
+        message = res.data.message || "Login successful";
+      } else if (res.data.userObj && res.data.message) {
+        user = res.data.userObj;
+        message = res.data.message;
+        token = null;
+        console.warn(
+          "No token provided in response, proceeding with user data:",
+          user
+        );
       } else {
-        sessionStorage.setItem("token", token);
-        sessionStorage.setItem("user", JSON.stringify(user));
+        throw new Error(
+          `Invalid response structure: Expected token/jwt or userObj and message, got ${JSON.stringify(
+            res.data
+          )}`
+        );
+      }
+
+      // Store token and user data (if token exists)
+      if (token) {
+        if (rememberMe) {
+          localStorage.setItem("token", token);
+          localStorage.setItem("user", JSON.stringify(user));
+        } else {
+          sessionStorage.setItem("token", token);
+          sessionStorage.setItem("user", JSON.stringify(user));
+        }
+      } else {
+        console.warn("Token missing, storing user data only");
+        if (rememberMe) {
+          localStorage.setItem("user", JSON.stringify(user));
+        } else {
+          sessionStorage.setItem("user", JSON.stringify(user));
+        }
       }
 
       setSuccess(message || "Login successful! Redirecting...");
 
+      // Redirect to StudentDashboard
       setTimeout(() => {
-        switch (user.role) {
-          case "admin":
-            window.location.href = "/admin/dashboard";
-            break;
-          case "teacher":
-            window.location.href = "/teacher/dashboard";
-            break;
-          case "student":
-            window.location.href = "/student/dashboard";
-            break;
-          default:
-            window.location.href = "/dashboard";
-        }
+        window.location.href = "/student/dashboard";
       }, 1000);
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-          err.response?.data?.message ||
-          "Invalid credentials. Please try again."
-      );
+      console.error("Login error:", err, "Response:", err.response?.data);
+      if (err.response?.status === 404) {
+        setError("Login endpoint not found. Please contact support.");
+      } else {
+        setError(
+          err.response?.data?.error ||
+            err.response?.data?.message ||
+            err.message ||
+            "Failed to log in. Please try again."
+        );
+      }
     } finally {
       setIsLoading(false);
     }
