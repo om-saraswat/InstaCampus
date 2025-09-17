@@ -74,7 +74,7 @@ export default function RegisterPage() {
         department: form.department,
       };
 
-      const response = await api.post("/signup", payload);
+      const response = await api.post("/auth/signup", payload);
 
       // Log response for debugging
       console.log("Full API response:", response.data);
