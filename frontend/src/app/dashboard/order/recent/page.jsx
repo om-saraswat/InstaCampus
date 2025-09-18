@@ -3,16 +3,15 @@
 import React, { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 
-const OrderPage = () => {
+const RecentOrderPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [vendorId, setVendorId] = useState(null);
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchRecentOrders = async () => {
       try {
         // Get vendor information from session
         const storedUser = sessionStorage.getItem("user");
@@ -29,10 +28,10 @@ const OrderPage = () => {
         }
 
         setVendorId(user._id);
-        console.log("Fetching orders for vendor ID:", user._id);
+        console.log("Fetching recent orders for vendor ID:", user._id);
 
-        // Make API call - you might need to adjust this endpoint
-        const response = await api.get(`/vendor/orders`);
+        // Make API call for recent orders
+        const response = await api.get(`/vendor/recent/orders`);
         console.log("Full API response:", response);
         console.log("Response data:", response.data);
 
@@ -56,22 +55,22 @@ const OrderPage = () => {
         setOrders(finalOrders);
 
         if (finalOrders.length === 0) {
-          console.log("No orders found for this vendor");
+          console.log("No recent orders found for this vendor");
         }
 
       } catch (err) {
-        console.error("Error fetching orders:", err);
+        console.error("Error fetching recent orders:", err);
         console.error("Error message:", err.message);
         console.error("Error response:", err.response);
         console.error("Error response data:", err.response?.data);
         
-        setError(`Failed to fetch orders: ${err.message}`);
+        setError(`Failed to fetch recent orders: ${err.message}`);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOrders();
+    fetchRecentOrders();
   }, []);
 
   // Calculate order total safely
@@ -130,7 +129,7 @@ const OrderPage = () => {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading orders...</p>
+          <p className="text-gray-600">Loading recent orders...</p>
         </div>
       </div>
     );
@@ -162,17 +161,17 @@ const OrderPage = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">All Orders</h1>
-            <p className="text-gray-600">Manage and track your vendor orders</p>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Recent Orders</h1>
+            <p className="text-gray-600">Your latest orders from the past 30 days</p>
           </div>
           
           <div className="flex flex-wrap gap-3 mt-4 sm:mt-0">
-            <Link href="/dashboard/order/recent">
+            <Link href="/dashboard/order">
               <button className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                Recent Orders
+                All Orders
               </button>
             </Link>
             
@@ -188,35 +187,156 @@ const OrderPage = () => {
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
           <h3 className="text-sm font-semibold text-yellow-800 mb-2">Debug Info:</h3>
           <p className="text-xs text-yellow-700">Vendor ID: {vendorId}</p>
-          <p className="text-xs text-yellow-700">Orders Count: {orders.length}</p>
+          <p className="text-xs text-yellow-700">Recent Orders Count: {orders.length}</p>
           <p className="text-xs text-yellow-700">Orders Type: {Array.isArray(orders) ? 'Array' : typeof orders}</p>
         </div>
+
+        {/* Quick Stats */}
+        {orders.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+            {/* Total Orders */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Total Orders</p>
+                  <p className="text-2xl font-bold text-blue-600">{orders.length}</p>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Pending Orders */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Pending</p>
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {orders.filter(order => order.orderStatus?.toLowerCase() === 'pending').length}
+                  </p>
+                </div>
+                <div className="bg-yellow-100 p-3 rounded-full">
+                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Processing/Confirmed Orders */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Processing</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {orders.filter(order => 
+                      ['confirmed', 'processing'].includes(order.orderStatus?.toLowerCase())
+                    ).length}
+                  </p>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Shipped Orders */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Shipped</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {orders.filter(order => 
+                      ['shipped', 'out for delivery'].includes(order.orderStatus?.toLowerCase())
+                    ).length}
+                  </p>
+                </div>
+                <div className="bg-purple-100 p-3 rounded-full">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Delivered Orders */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Delivered</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {orders.filter(order => 
+                      ['delivered', 'completed'].includes(order.orderStatus?.toLowerCase())
+                    ).length}
+                  </p>
+                </div>
+                <div className="bg-green-100 p-3 rounded-full">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Cancelled/Rejected Orders */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Cancelled</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {orders.filter(order => 
+                      ['cancelled', 'rejected'].includes(order.orderStatus?.toLowerCase())
+                    ).length}
+                  </p>
+                </div>
+                <div className="bg-red-100 p-3 rounded-full">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Orders Grid */}
         {orders.length === 0 ? (
           <div className="text-center bg-white rounded-2xl shadow-lg p-12">
             <div className="mb-6">
               <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Orders Found</h3>
-            <p className="text-gray-500 mb-6">You don't have any orders yet. Orders will appear here once customers start purchasing your products.</p>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Recent Orders</h3>
+            <p className="text-gray-500 mb-6">You don't have any recent orders. New orders from the past 30 days will appear here.</p>
+            <Link href="/dashboard/order" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              View All Orders
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {orders.map((order) => (
               <Link
                 key={order._id}
-                href={`/dashboard/order/${order._id}`}
-                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                href={`/dashboard/order/recent/${order._id}`}
+                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-l-blue-500"
               >
-                {/* Order Header */}
+                {/* Order Header with Recent Badge */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="font-semibold text-gray-800 text-lg">
-                      Order #{order._id?.slice(-8) || 'Unknown'}
-                    </h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-gray-800 text-lg">
+                        Order #{order._id?.slice(-8) || 'Unknown'}
+                      </h3>
+                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">
+                        Recent
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-500">
                       {formatDate(order.createdAt || order.orderDate)}
                     </p>
@@ -288,4 +408,4 @@ const OrderPage = () => {
   );
 };
 
-export default OrderPage;
+export default RecentOrderPage;

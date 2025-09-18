@@ -20,7 +20,7 @@ router.get("/", vendorauth, async (req, res) => {
     }
 
     // Find all products in this category
-    const products = await Inventory.find({});
+    const products = await Inventory.find({productId});
 
     res.status(200).json({ products });
   } catch (err) {
