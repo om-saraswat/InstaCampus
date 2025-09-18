@@ -10,10 +10,10 @@ router.post("/",vendorauth,async(req,res) => {
     try{
         const {name,category,description,price,imgUrl,lowStockThreshold} = req.body;
         
-        if(req.user.role === "canteen-vendor" && category !== "Food and Drinks"){
+        if(req.user.role === "canteen-vendor" && category !== "canteen"){
             throw new Error("Canteen vendor can only add Food and Drinks category products");
         }
-        if(req.user.role === "stationary-vendor" && category !== "stationary" && category !== "Xeros"){
+        if(req.user.role === "stationary-vendor" && category !== "stationary"){
             throw new Error("Stationary vendor can only add stationary and Xeros category products");
         }
         
