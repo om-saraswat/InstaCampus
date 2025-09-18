@@ -96,7 +96,7 @@ export default function LoginPage() {
       // Redirect to StudentDashboard
       setTimeout(() => {
   if (user?.role === "student") {
-    window.location.href = "/student/dashboard";
+    window.location.href = "/vendor";
   } else if (
     user?.role === "canteen-vendor" || 
     user?.role === "stationary-vendor"

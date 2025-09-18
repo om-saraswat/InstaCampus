@@ -1,0 +1,139 @@
+"use client";
+import Link from "next/link";
+import { useState } from "react";
+
+export default function VendorPage({ darkMode }) {
+  const [imageErrors, setImageErrors] = useState({});
+  const handleImageError = (categoryName) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [categoryName]: true
+    }));
+  };
+
+  const vendorCategories = [
+    { 
+      name: "Canteen Vendors", 
+      path: "/vendor/canteen-vendor", 
+      img: "/canteen.jpg",
+      description: "Delicious food from campus canteens",
+      icon: "🍽️"
+    },
+    { 
+      name: "Stationary Vendors", 
+      path: "/vendor/stationary-vendor", 
+      img: "/stationary.jpg",
+      description: "All your academic supplies in one place",
+      icon: "📚"
+    },
+    // Add more vendor categories as needed
+    // { 
+    //   name: "Book Vendors", 
+    //   path: "/vendor/book-vendor", 
+    //   img: "/books.jpg",
+    //   description: "Textbooks and reference materials",
+    //   icon: "📖"
+    // },
+    // { 
+    //   name: "Electronics Vendors", 
+    //   path: "/vendor/electronics-vendor", 
+    //   img: "/electronics.jpg",
+    //   description: "Laptops, gadgets, and tech accessories",
+    //   icon: "💻"
+    // },
+  ];
+
+  return (
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center p-6 ${
+        darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
+      }`}
+    >
+      {/* Header Section */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">🏪 Vendor Hub</h1>
+        <p className={`text-lg ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+          Discover amazing vendors across different categories
+        </p>
+      </div>
+
+      {/* Categories Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 w-full max-w-6xl">
+        {vendorCategories.map((category) => (
+          <Link
+            key={category.name}
+            href={category.path}
+            className={`group relative rounded-xl shadow-xl overflow-hidden transition-all duration-300 transform hover:scale-105 hover:shadow-2xl ${
+              darkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
+            }`}
+          >
+            {/* Image Background */}
+            <div className="relative h-64 overflow-hidden">
+              <img
+                src={category.img}
+                alt={category.name}
+                className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity duration-300 group-hover:scale-110"
+                onError={(e) => {
+                  // Fallback to gradient background if image fails
+                  e.target.style.display = 'none';
+                  e.target.parentElement.classList.add('bg-gradient-to-br', 'from-indigo-500', 'to-purple-600');
+                }}
+              />
+              
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent group-hover:from-black/40 transition-all duration-300"></div>
+              
+              {/* Content */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
+                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">
+                  {category.icon}
+                </div>
+                <h2 className="text-2xl font-bold mb-2 text-center">
+                  {category.name}
+                </h2>
+                <p className="text-sm text-center opacity-90 group-hover:opacity-100 transition-opacity">
+                  {category.description}
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom Section */}
+            <div className={`p-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+              <div className="flex items-center justify-between">
+                <span className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  Explore Vendors
+                </span>
+                <div className="text-indigo-500 group-hover:text-indigo-600 transition-colors">
+                  <svg 
+                    className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Call to Action */}
+      <div className="mt-16 text-center">
+        <p className={`text-lg mb-6 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+          Can't find what you're looking for?
+        </p>
+        <button 
+          className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          onClick={() => {
+            // Add logic to request new vendor category or contact admin
+            alert("Feature coming soon! Contact admin to request new vendor categories.");
+          }}
+        >
+          Request New Category
+        </button>
+      </div>
+    </div>
+  );
+}
