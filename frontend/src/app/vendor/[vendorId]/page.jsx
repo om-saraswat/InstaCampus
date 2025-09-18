@@ -89,37 +89,6 @@ const addToCart = async (productId) => {
     <div className="relative flex">
       {/* ✅ Main Content */}
       <main className="flex-1 p-4">
-        {/* 🔹 Top Header Bar */}
-        <div
-          className={`grid grid-cols-2 w-full ${
-            darkMode ? "bg-gray-900" : "bg-gray-200"
-          }`}
-          style={{ height: "80px" }}
-        >
-          {/* Left Half - Canteen */}
-          <Link
-            href="/vendor/canteen-vendor?category=canteen"
-            className={`flex items-center justify-center text-2xl font-bold ${
-              darkMode
-                ? "text-white hover:text-indigo-400"
-                : "text-gray-800 hover:text-indigo-600"
-            }`}
-          >
-            Canteen
-          </Link>
-
-          {/* Right Half - Stationary */}
-          <Link
-            href="/vendor/stationary-vendor?category=stationary"
-            className={`flex items-center justify-center text-2xl font-bold ${
-              darkMode
-                ? "text-white hover:text-indigo-400"
-                : "text-gray-800 hover:text-indigo-600"
-            }`}
-          >
-            Stationary
-          </Link>
-        </div>
 
         {/* Page Content */}
         <div className="mb-6 mt-4">

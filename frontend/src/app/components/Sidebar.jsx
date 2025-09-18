@@ -198,13 +198,6 @@ useEffect(() => {
       color: "from-orange-500 to-orange-600",
       description: "Fresh food and beverages",
     },
-    {
-      id: "general",
-      name: "General Store",
-      icon: Store,
-      color: "from-green-500 to-green-600",
-      description: "Daily essentials and accessories",
-    },
   ];
 
   return (
@@ -323,7 +316,7 @@ useEffect(() => {
               </div>
               
               {/* Stationary Cart */}
-              <div
+              <div onClick={() => router.push('/cart/stationary')}
                 className={`p-3 rounded-xl ${
                   darkMode
                     ? "bg-gradient-to-r from-blue-900/20 to-blue-800/20"
@@ -375,7 +368,7 @@ useEffect(() => {
               </div>
 
               {/* Canteen Cart */}
-              <div
+              <div onClick={() => router.push('/cart/canteen')}
                 className={`p-3 rounded-xl ${
                   darkMode
                     ? "bg-gradient-to-r from-orange-900/20 to-orange-800/20"
@@ -506,46 +499,7 @@ useEffect(() => {
                     />
                   </div>
                 </div>
-              </div>
-
-              {/* Category Filters */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Category Filters
-                </label>
-                {["Stationary", "Canteen", "General Store"].map((category) => (
-                  <div
-                    key={category}
-                    className="flex items-center space-x-2 mb-2"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.has(category)}
-                      onChange={(e) => {
-                        const newSelected = new Set(selectedCategories);
-                        if (e.target.checked) {
-                          newSelected.add(category);
-                        } else {
-                          newSelected.delete(category);
-                        }
-                        setSelectedCategories(newSelected);
-                      }}
-                      className="w-4 h-4 text-indigo-600"
-                    />
-                    <span
-                      className={`text-sm ${
-                        darkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      {category}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              </div>              
 
               {/* Cart Restriction Notice */}
               <div className={`mt-6 p-3 rounded-lg ${
