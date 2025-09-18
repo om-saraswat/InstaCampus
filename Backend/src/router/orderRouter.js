@@ -7,68 +7,74 @@ const product = require("../models/Product");
 const Inventory = require("../models/Inventory");
 
 
+// orders.js - CORRECTED LOGIC ✅
 router.post("/from-cart/:category", userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
         const category = req.params.category;
 
-        const cart = await Cart.findOne({ userId, category }).populate("items.productId", "price");
+        const cart = await Cart.findOne({ userId, category }).populate("items.productId", "price name");
         if (!cart || cart.items.length === 0) {
             return res.status(400).json({ error: `${category} cart is empty` });
         }
 
-        const items = cart.items.map(item => ({
+        // --- Step 1: Validate inventory for ALL items BEFORE making changes ---
+        for (const item of cart.items) {
+            const inventory = await Inventory.findOne({ productId: item.productId._id });
+            if (!inventory || inventory.quantityAvailable < item.quantity) {
+                return res.status(400).json({
+                    error: `Not enough stock for ${item.productId.name}. Available: ${inventory?.quantityAvailable || 0}, Requested: ${item.quantity}`
+                });
+            }
+        }
+
+        // --- Step 2: If all checks pass, create the order ---
+        const orderItems = cart.items.map(item => ({
             productId: item.productId._id,
             quantity: item.quantity,
             price: item.productId.price
         }));
-
-        const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const totalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
         const order = new Order({
             userId,
-            items,
+            items: orderItems,
             totalAmount,
             productType: category
         });
-
         await order.save();
 
-
-        for (const item of items) {
-            const inventory = await Inventory.findOne({ productId: item.productId });
-            if (!inventory) {
-                return res.status(400).json({ error: `Inventory not found for product ${item.productId}` });
-            }
-
-            if (inventory.quantityAvailable < item.quantity) {
-                return res.status(400).json({ error: `Not enough stock for product ${item.productId}` });
-            }
-
-            inventory.quantityAvailable -= item.quantity;
-            await inventory.save();
+        // --- Step 3: Decrement inventory ---
+        for (const item of orderItems) {
+            await Inventory.updateOne(
+                { productId: item.productId },
+                { $inc: { quantityAvailable: -item.quantity } }
+            );
         }
 
-        // Clear the cart
+        // --- Step 4: Clear the cart ---
         cart.items = [];
         await cart.save();
 
         res.status(201).json(order);
     } catch (err) {
-        console.error(err);
+        console.error("Order creation error:", err);
         res.status(500).json({ error: "Internal server error" });
     }
 });
 
-router.get("/",userAuth, async (req, res) => {
+router.get("/", userAuth, async (req, res) => {
+  try {
     const orders = await Order.find({ userId: req.user._id })
-        .populate("items.productId", "name price")
-        .populate("userId", "name email");
+      .populate("items.productId", "name price")
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 }); // Sort by creation date, newest first
 
     res.json(orders);
-
-});
-
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }});
 router.get("/:id",userAuth, async (req, res) => {
     try{
         const order = await Order.findById(req.params.id)
@@ -84,33 +90,37 @@ router.get("/:id",userAuth, async (req, res) => {
     }
     
 });
+// orders.js - CORRECTED LOGIC ✅
 router.patch("/cancel/:id", userAuth, async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
-        if (!order) throw new Error("Order not found");
+        if (!order) {
+            return res.status(404).json({ error: "Order not found" });
+        }
 
         if (order.userId.toString() !== req.user._id.toString()) {
-            throw new Error("You can only cancel your own orders");
+            return res.status(403).json({ error: "You can only cancel your own orders" });
         }
 
-        if (order.orderStatus === "ready" || order.orderStatus === "completed") {
-            throw new Error("Only orders with status 'ready' or 'completed' can be cancelled");
+        // ✅ Corrected Logic: Prevent cancellation for processed orders.
+        const nonCancellableStatuses = ['completed', 'shipped', 'delivered', 'cancelled'];
+        if (nonCancellableStatuses.includes(order.orderStatus)) {
+            return res.status(400).json({ error: `Cannot cancel an order with status: '${order.orderStatus}'` });
         }
 
+        // Restore inventory quantities for each item in the order
+        for (const item of order.items) {
+            await Inventory.updateOne(
+                { productId: item.productId },
+                { $inc: { quantityAvailable: item.quantity } }
+            );
+        }
+        
         // Update order status
         order.orderStatus = "cancelled";
         await order.save();
 
-        // Restore inventory quantities
-        for (const item of order.items) {
-            const inventory = await Inventory.findOne({ productId: item.productId });
-            if (inventory) {
-                inventory.quantityAvailable += item.quantity;
-                await inventory.save();
-            }
-        }
-
-        res.json({ order, message: "Order cancelled and inventory restored successfully" });
+        res.json({ message: "Order cancelled and inventory restored successfully", order });
     } catch (err) {
         res.status(400).send("Error Occurred: " + err.message);
     }

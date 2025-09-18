@@ -1,27 +1,26 @@
-// app/cart/[category]/page.js
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import axios from '@/lib/axios';
 import { useTheme } from '../../context/ThemeProvider';
 import { Loader, Trash2, ShoppingBag, AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
-import Link from 'next/link';
 
 const CartPage = () => {
-  const { category } = useParams();
-  const router = useRouter();
+  // Replaced Next.js hooks with standard browser APIs to resolve compilation errors.
+  const pathSegments = window.location.pathname.split('/');
+  const category = pathSegments[pathSegments.indexOf('cart') + 1] || '';
+  const router = {
+    back: () => window.history.back(),
+  };
+  
   const { darkMode } = useTheme();
 
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Capitalize category name for display
   const categoryName = category ? category.charAt(0).toUpperCase() + category.slice(1) : '';
 
-  // Function to fetch cart data
   const fetchCart = async () => {
     if (!category) return;
     setLoading(true);
@@ -42,17 +41,14 @@ const CartPage = () => {
     }
   };
 
-  // Initial fetch
   useEffect(() => {
     fetchCart();
   }, [category]);
 
-  // Dispatch event to update sidebar
   const dispatchCartUpdate = () => {
     window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { category } }));
   };
 
-  // Handlers for cart actions
   const handleQuantityChange = async (productId, newQuantity) => {
     if (newQuantity < 1) return;
     try {
@@ -98,20 +94,16 @@ const CartPage = () => {
     }
   };
   
-  // Memoized calculation for totals
   const totals = useMemo(() => {
     if (!cart?.items) return { subtotal: 0, tax: 0, total: 0 };
-
     const subtotal = cart.items.reduce((sum, item) => 
       sum + (item.productId.price * item.quantity), 0
     );
-    const tax = subtotal * 0.05; // Example 5% tax
+    const tax = subtotal * 0.05;
     const total = subtotal + tax;
     return { subtotal, tax, total };
   }, [cart]);
 
-
-  // RENDER LOGIC
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -126,19 +118,18 @@ const CartPage = () => {
         <AlertCircle className={`w-16 h-16 mb-4 ${darkMode ? 'text-yellow-400' : 'text-yellow-500'}`} />
         <h2 className={`text-2xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>{error}</h2>
         <p className={`mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Looks like there's nothing here.</p>
-        <Link href={`/vendor/${category}-vendor`} className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors">
+        <a href={`/vendor/${category}-vendor`} className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors">
           Shop {categoryName} Items
-        </Link>
+        </a>
       </div>
     );
   }
 
-  if (!cart) return null; // Should be covered by error state
+  if (!cart) return null;
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} p-4 sm:p-6 lg:p-8`}>
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()} className="flex items-center gap-2 hover:text-indigo-500 transition-colors">
             <ArrowLeft size={20} />
@@ -150,7 +141,6 @@ const CartPage = () => {
           </button>
         </div>
 
-        {/* Vendor Info */}
         {cart.vendorId && (
           <div className={`p-4 rounded-lg mb-6 ${darkMode ? 'bg-gray-800' : 'bg-white border'}`}>
             <p className="text-sm text-gray-500 dark:text-gray-400">Items from:</p>
@@ -158,9 +148,7 @@ const CartPage = () => {
           </div>
         )}
         
-        {/* Cart Items & Summary Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Items List */}
           <div className="lg:col-span-2 space-y-4">
              {cart.items.map(item => (
                 <div key={item.productId._id} className={`flex items-center gap-4 p-4 rounded-lg shadow-sm ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -188,22 +176,24 @@ const CartPage = () => {
             ))}
           </div>
 
-          {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className={`p-6 rounded-lg shadow-sm sticky top-24 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
               <h3 className="text-xl font-semibold border-b pb-3 mb-4 dark:border-gray-700">Order Summary</h3>
-              {/* ... (price details) ... */}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between"><span>Subtotal</span><span>₹{totals.subtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>Tax (5%)</span><span>₹{totals.tax.toFixed(2)}</span></div>
+              </div>
               <div className="flex justify-between font-bold text-lg border-t pt-3 mt-3 dark:border-gray-700">
                   <span>Total</span>
                   <span>₹{totals.total.toFixed(2)}</span>
               </div>
 
-              {/* THIS IS THE UPDATED PART */}
-              <Link href={`/order`} className="block w-full mt-6">
+              {/* Replaced Link with a standard anchor tag */}
+              <a href={`/checkout/${category}`} className="block w-full mt-6">
                 <button className="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-all">
                   Proceed to Checkout
                 </button>
-              </Link>
+              </a>
               
               <button onClick={handleClearCart} className="w-full mt-3 text-sm text-red-500 hover:text-red-700 transition-colors">
                 Clear Cart

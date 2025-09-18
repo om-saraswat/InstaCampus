@@ -119,7 +119,7 @@ router.put("/update-item", userAuth, async (req, res) => {
         if (quantity < 1) {
             return res.status(400).json({ error: "Quantity must be at least 1" });
         }
-
+     
         const cart = await Cart.findOne({ userId, category });
         if (!cart) {
             return res.status(404).json({ error: "Cart not found" });
@@ -155,7 +155,7 @@ router.delete("/remove-item", userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
         const { productId, category } = req.body; // Get category from body
-
+ 
         let cart = await Cart.findOne({ userId, category });
         if (!cart) {
             return res.status(404).json({ error: "Cart not found" });
