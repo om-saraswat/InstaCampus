@@ -119,27 +119,29 @@ function Sidebar() {
   }, []);
 
   // Listen for cart updates from other components
+// ✅ only one definition above useEffect
+const handleCartUpdateCategory = (event) => {
+  const { category } = event.detail || {};
+  if (category) {
+    getCartData(category).then(data => {
+      setCartData(prev => ({
+        ...prev,
+        [category]: data
+      }));
+    });
+  } else {
+    loadCartData();
+  }
+};
+
+// ✅ addEventListener just once here
 useEffect(() => {
-  const handleCartUpdateCategory = (event) => {
-    const { category } = event.detail;
-    if (category) {
-      getCartData(category).then(data => {
-        setCartData(prev => ({
-          ...prev,
-          [category]: data
-        }));
-      });
-    } else {
-      loadCartData();
-    }
-  };
-
   window.addEventListener('cartUpdated', handleCartUpdateCategory);
-
   return () => {
     window.removeEventListener('cartUpdated', handleCartUpdateCategory);
   };
 }, []);
+
 
 
   // Auto-refresh cart data every 30 seconds (optional)

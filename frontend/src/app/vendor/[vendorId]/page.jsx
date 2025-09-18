@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "@/lib/axios";
 import CartSidebar from "@/app/components/CartSidebar";
@@ -17,9 +17,9 @@ export default function VendorProductsPage({ darkMode }) {
   const vendorId = params.vendorId || params.id;
 
   // 🔹 category depends on route — adjust this logic if needed
-  const category = router.asPath?.includes("canteen")
-    ? "canteen"
-    : "stationary";
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category") || "stationary";
+    
 
 const addToCart = async (productId) => {
   try {
@@ -27,9 +27,7 @@ const addToCart = async (productId) => {
     setCartOpen(true); // ✅ open cart after adding
 
     // 🔔 Dispatch custom event so Sidebar can refresh
-    window.dispatchEvent(
-      new CustomEvent("cartUpdated", { detail: { category } })
-    );
+    window.dispatchEvent(new CustomEvent("cartUpdated"));
 
   } catch (err) {
     alert(err.response?.data?.error || "Failed to add to cart");
@@ -88,7 +86,7 @@ const addToCart = async (productId) => {
         >
           {/* Left Half - Canteen */}
           <Link
-            href="/vendor/canteen-vendor"
+            href="/vendor/canteen-vendor?category=canteen"
             className={`flex items-center justify-center text-2xl font-bold ${
               darkMode
                 ? "text-white hover:text-indigo-400"
@@ -100,7 +98,7 @@ const addToCart = async (productId) => {
 
           {/* Right Half - Stationary */}
           <Link
-            href="/vendor/stationary-vendor"
+            href="/vendor/stationary-vendor?category=stationary"
             className={`flex items-center justify-center text-2xl font-bold ${
               darkMode
                 ? "text-white hover:text-indigo-400"
