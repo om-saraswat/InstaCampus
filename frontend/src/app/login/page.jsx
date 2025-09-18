@@ -45,27 +45,28 @@ export default function LoginPage() {
 
       // Handle different possible response structures
       let token, user, message;
-      if (res.data.token && res.data.user) {
-        ({ token, user, message } = res.data);
-      } else if (res.data.data && res.data.data.token && res.data.data.user) {
-        ({ token, user, message } = res.data.data);
-      } else if (res.data.success && (res.data.token || res.data.jwt)) {
-        token = res.data.token || res.data.jwt;
-        user = res.data.user || { role: "student" };
-        message = res.data.message;
-      } else if (res.data.jwt) {
-        token = res.data.jwt;
-        user = res.data.user || { role: "student" };
-        message = res.data.message || "Login successful";
-      } else if (res.data.userObj && res.data.message) {
-        user = res.data.userObj;
-        message = res.data.message;
-        token = null;
+        if (res.data.token && res.data.user) {
+          ({ token, user, message } = res.data);
+        } else if (res.data.data && res.data.data.token && res.data.data.user) {
+          ({ token, user, message } = res.data.data);
+        } else if (res.data.success && (res.data.token || res.data.jwt)) {
+          token = res.data.token || res.data.jwt;
+          user = res.data.user || { role: "student" };
+          message = res.data.message;
+        } else if (res.data.jwt) {
+          token = res.data.jwt;
+          user = res.data.user || { role: "student" };
+          message = res.data.message || "Login successful";
+        } else if (res.data.userObj && res.data.message) {
+          user = res.data.userObj;
+          message = res.data.message;
+          token = null;
         console.warn(
           "No token provided in response, proceeding with user data:",
           user
         );
-      } else {
+      }
+      else {
         throw new Error(
           `Invalid response structure: Expected token/jwt or userObj and message, got ${JSON.stringify(
             res.data
@@ -94,17 +95,17 @@ export default function LoginPage() {
       setSuccess(message || "Login successful! Redirecting...");
 
       // Redirect to StudentDashboard
-      setTimeout(() => {
-  if (user?.role === "student") {
-    window.location.href = "/vendor";
-  } else if (
-    user?.role === "canteen-vendor" || 
-    user?.role === "stationary-vendor"
-  ) {
-    window.location.href = "/dashboard";
-  } else {
-    console.warn("Unknown role:", user?.role);
-    window.location.href = "/"; // fallback (maybe home)
+  setTimeout(() => {
+    if (user?.role === "student") {
+      window.location.href = "/vendor";
+    } else if (
+      user?.role === "canteen-vendor" || 
+      user?.role === "stationary-vendor"
+    ) {
+      window.location.href = "/dashboard";
+    } else {
+      console.warn("Unknown role:", user?.role);
+      window.location.href = "/"; // fallback (maybe home)
   }
 }, 1000);
     } catch (err) {

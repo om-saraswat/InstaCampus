@@ -175,7 +175,7 @@ const RecentOrderPage = () => {
               </button>
             </Link>
             
-            <Link href="/vendor/dashboard">
+            <Link href="/dashboard">
               <button className="bg-gray-600 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-gray-700 transition-colors">
                 Back to Dashboard
               </button>
