@@ -6,7 +6,7 @@ import { useTheme } from '../../context/ThemeProvider';
 import { Loader, Trash2, ShoppingBag, AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 
 const CartPage = () => {
-  // Replaced Next.js hooks with standard browser APIs to resolve compilation errors.
+  // Get category from URL
   const pathSegments = window.location.pathname.split('/');
   const category = pathSegments[pathSegments.indexOf('cart') + 1] || '';
   const router = {
@@ -18,8 +18,66 @@ const CartPage = () => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+
+  // Define unallowed roles - these roles cannot access this page
+  const UNALLOWED_ROLES = ['stationary-vendor', 'canteen-vendor'];
 
   const categoryName = category ? category.charAt(0).toUpperCase() + category.slice(1) : '';
+
+  useEffect(() => {
+    const checkAuthAndLoadCart = async () => {
+      try {
+        // Get user information from session
+        const storedUser = sessionStorage.getItem("user");
+        console.log("Raw stored user:", storedUser);
+        
+        if (!storedUser) {
+          console.log("No user found in session storage");
+          setError("Please login to view your cart.");
+          setLoading(false);
+          return;
+        }
+
+        const user = JSON.parse(storedUser);
+        console.log("Parsed user:", user);
+
+        // Check if user exists and has required fields
+        if (!user?._id) {
+          console.log("No user ID found in session storage");
+          setError("Invalid user session. Please login again.");
+          setLoading(false);
+          return;
+        }
+
+        // Role-based access control - block vendor roles
+        if (user.role && UNALLOWED_ROLES.includes(user.role)) {
+          console.log("User role blocked:", user.role);
+          console.log("Blocked roles:", UNALLOWED_ROLES);
+          setAccessDenied(true);
+          setError("Access denied. Vendors cannot access customer cart pages.");
+          setLoading(false);
+          return;
+        }
+
+        console.log("User authorized with role:", user.role);
+        setUserId(user._id);
+        setUserRole(user.role);
+
+        // Only fetch cart after authentication is successful
+        await fetchCart();
+
+      } catch (err) {
+        console.error("Error during authentication check:", err);
+        setError("Authentication check failed. Please login again.");
+        setLoading(false);
+      }
+    };
+
+    checkAuthAndLoadCart();
+  }, [category]);
 
   const fetchCart = async () => {
     if (!category) return;
@@ -40,10 +98,6 @@ const CartPage = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchCart();
-  }, [category]);
 
   const dispatchCartUpdate = () => {
     window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { category } }));
@@ -104,23 +158,92 @@ const CartPage = () => {
     return { subtotal, tax, total };
   }, [cart]);
 
+  // Loading state
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader className="w-12 h-12 animate-spin text-indigo-500" />
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode ? "bg-gray-900" : "bg-gray-100"
+      }`}>
+        <div className="text-center">
+          <Loader className="w-12 h-12 animate-spin text-indigo-500 mx-auto mb-4" />
+          <p className={darkMode ? "text-gray-300" : "text-gray-600"}>
+            {accessDenied ? "Checking permissions..." : "Loading your cart..."}
+          </p>
+        </div>
       </div>
     );
   }
 
-  if (error) {
+  // Access denied state
+  if (accessDenied) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode ? "bg-gray-900" : "bg-gray-100"
+      }`}>
+        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md ${
+          darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
+        }`}>
+          <div className="mb-4">
+            <ShoppingBag className="w-16 h-16 text-red-500 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+          <p className={`mb-2 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+            This cart page is restricted from:
+          </p>
+          <ul className={`text-sm mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+            <li>• Canteen Vendors</li>
+            <li>• Stationary Vendors</li>
+          </ul>
+          <p className={`text-xs mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+            This is a customer-only page for managing shopping carts.
+          </p>
+          <div className="flex flex-col gap-3">
+            <a href="/vendor-dashboard" className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+              Go to Vendor Dashboard
+            </a>
+            <a href="/dashboard" className={`px-6 py-2 rounded-lg transition-colors ${
+              darkMode 
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600" 
+                : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+            }`}>
+              Back to Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state (for other errors)
+  if (error && !accessDenied) {
     return (
       <div className="flex flex-col justify-center items-center h-screen text-center p-4">
         <AlertCircle className={`w-16 h-16 mb-4 ${darkMode ? 'text-yellow-400' : 'text-yellow-500'}`} />
         <h2 className={`text-2xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>{error}</h2>
-        <p className={`mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Looks like there's nothing here.</p>
-        <a href={`/vendor/${category}-vendor`} className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors">
-          Shop {categoryName} Items
-        </a>
+        <p className={`mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {error.includes("login") ? "Please login to continue" : "Looks like there's nothing here."}
+        </p>
+        {error.includes("login") ? (
+          <div className="flex flex-col gap-3">
+            <a href="/login" className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors">
+              Go to Login
+            </a>
+            <button
+              onClick={() => window.location.reload()}
+              className={`px-6 py-2 rounded-lg transition-colors ${
+                darkMode 
+                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600" 
+                  : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+              }`}
+            >
+              Try Again
+            </button>
+          </div>
+        ) : (
+          <a href={`/vendor/${category}-vendor`} className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors">
+            Shop {categoryName} Items
+          </a>
+        )}
       </div>
     );
   }
@@ -130,6 +253,20 @@ const CartPage = () => {
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} p-4 sm:p-6 lg:p-8`}>
       <div className="max-w-4xl mx-auto">
+        {/* Debug Info (remove in production) */}
+        <div className={`mb-6 p-4 rounded-lg border ${
+          darkMode 
+            ? "bg-green-900 border-green-700 text-green-200" 
+            : "bg-green-50 border-green-200 text-green-700"
+        }`}>
+          <h3 className="text-sm font-semibold mb-2">✅ Customer Cart Access Granted:</h3>
+          <p className="text-xs">User Role: {userRole}</p>
+          <p className="text-xs">User ID: {userId}</p>
+          <p className="text-xs">Cart Category: {categoryName}</p>
+          <p className="text-xs">Items in Cart: {cart?.items?.length || 0}</p>
+          <p className="text-xs">Access Type: Customer cart management</p>
+        </div>
+
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()} className="flex items-center gap-2 hover:text-indigo-500 transition-colors">
             <ArrowLeft size={20} />
@@ -188,7 +325,6 @@ const CartPage = () => {
                   <span>₹{totals.total.toFixed(2)}</span>
               </div>
 
-              {/* Replaced Link with a standard anchor tag */}
               <a href={`/checkout/${category}`} className="block w-full mt-6">
                 <button className="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-all">
                   Proceed to Checkout

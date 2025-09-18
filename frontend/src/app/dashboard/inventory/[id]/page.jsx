@@ -14,18 +14,54 @@ const InventoryUpdatePage = () => {
   const [deductQuantity, setDeductQuantity] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState(""); // success or error
+  const [vendorId, setVendorId] = useState(null);
+  const [accessDenied, setAccessDenied] = useState(false);
   const params = useParams();
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchInventoryItem = async () => {
-      try {
-        // Get vendor information from session
-        const storedUser = sessionStorage.getItem("user");
-        const user = storedUser ? JSON.parse(storedUser) : null;
+  // Define allowed roles
+  const ALLOWED_ROLES = ['canteen-vendor', 'stationary-vendor'];
 
+  useEffect(() => {
+    const checkAuthAndFetchInventoryItem = async () => {
+      try {
+        // Get user information from session
+        const storedUser = sessionStorage.getItem("user");
+        console.log("Raw stored user:", storedUser);
+        
+        if (!storedUser) {
+          console.log("No user found in session storage");
+          setError("Please login to view inventory details.");
+          setLoading(false);
+          return;
+        }
+
+        const user = JSON.parse(storedUser);
+        console.log("Parsed user:", user);
+
+        // Check if user exists and has required fields
         if (!user?._id) {
-          setError("Please login to view inventory.");
+          console.log("No vendor ID found in session storage");
+          setError("Invalid user session. Please login again.");
+          setLoading(false);
+          return;
+        }
+
+        // Role-based access control
+        if (!user.role || !ALLOWED_ROLES.includes(user.role)) {
+          console.log("User role not authorized:", user.role);
+          console.log("Allowed roles:", ALLOWED_ROLES);
+          setAccessDenied(true);
+          setError("Access denied. This page is only accessible to canteen and stationary vendors.");
+          setLoading(false);
+          return;
+        }
+
+        console.log("User authorized with role:", user.role);
+        setVendorId(user._id);
+
+        if (!params.id) {
+          setError("Inventory item ID is missing.");
           setLoading(false);
           return;
         }
@@ -49,14 +85,28 @@ const InventoryUpdatePage = () => {
 
       } catch (err) {
         console.error("Error fetching inventory item:", err);
-        setError(`Failed to fetch inventory item: ${err.message}`);
+        
+        // Handle specific API errors
+        if (err.response?.status === 401) {
+          setError("Session expired. Please login again.");
+        } else if (err.response?.status === 403) {
+          setAccessDenied(true);
+          setError("Access forbidden. You don't have permission to view this inventory item.");
+        } else if (err.response?.status === 404) {
+          setError("Inventory item not found.");
+        } else {
+          setError(`Failed to fetch inventory item: ${err.message}`);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     if (params.id) {
-      fetchInventoryItem();
+      checkAuthAndFetchInventoryItem();
+    } else {
+      setError("Inventory item ID is required.");
+      setLoading(false);
     }
   }, [params.id]);
 
@@ -91,7 +141,14 @@ const InventoryUpdatePage = () => {
 
     } catch (err) {
       console.error("Error restocking:", err);
-      setMessage(err.response?.data?.error || "Failed to restock inventory.");
+      
+      if (err.response?.status === 401) {
+        setMessage("Session expired. Please login again.");
+      } else if (err.response?.status === 403) {
+        setMessage("Access forbidden. You don't have permission to update this inventory.");
+      } else {
+        setMessage(err.response?.data?.error || "Failed to restock inventory.");
+      }
       setMessageType("error");
     } finally {
       setUpdating(false);
@@ -135,7 +192,14 @@ const InventoryUpdatePage = () => {
 
     } catch (err) {
       console.error("Error deducting:", err);
-      setMessage(err.response?.data?.error || "Failed to deduct inventory.");
+      
+      if (err.response?.status === 401) {
+        setMessage("Session expired. Please login again.");
+      } else if (err.response?.status === 403) {
+        setMessage("Access forbidden. You don't have permission to update this inventory.");
+      } else {
+        setMessage(err.response?.data?.error || "Failed to deduct inventory.");
+      }
       setMessageType("error");
     } finally {
       setUpdating(false);
@@ -193,8 +257,37 @@ const InventoryUpdatePage = () => {
     );
   }
 
-  // Error state
-  if (error) {
+  // Access denied state
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
+          <div className="mb-4">
+            <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
+          <p className="text-gray-600 mb-2">This page is restricted to:</p>
+          <ul className="text-sm text-gray-500 mb-6">
+            <li>• Canteen Vendors</li>
+            <li>• Stationary Vendors</li>
+          </ul>
+          <div className="flex flex-col gap-3">
+            <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              Login with Vendor Account
+            </Link>
+            <Link href="/dashboard/inventory" className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+              Back to Inventory
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state (for other errors)
+  if (error && !accessDenied) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
@@ -236,6 +329,15 @@ const InventoryUpdatePage = () => {
               Back to Inventory
             </button>
           </Link>
+        </div>
+
+        {/* Debug Info (remove in production) */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <h3 className="text-sm font-semibold text-yellow-800 mb-2">Debug Info:</h3>
+          <p className="text-xs text-yellow-700">Vendor ID: {vendorId}</p>
+          <p className="text-xs text-yellow-700">Inventory Item ID: {params.id}</p>
+          <p className="text-xs text-yellow-700">Current Stock: {quantity}</p>
+          <p className="text-xs text-yellow-700">Product Name: {product?.name}</p>
         </div>
 
         {/* Message Display */}

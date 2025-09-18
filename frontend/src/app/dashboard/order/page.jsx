@@ -10,24 +10,47 @@ const OrderPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [vendorId, setVendorId] = useState(null);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  // Define allowed roles
+  const ALLOWED_ROLES = ['canteen-vendor', 'stationary-vendor'];
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const checkAuthAndFetchOrders = async () => {
       try {
-        // Get vendor information from session
+        // Get user information from session
         const storedUser = sessionStorage.getItem("user");
         console.log("Raw stored user:", storedUser);
         
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        console.log("Parsed user:", user);
-
-        if (!user?._id) {
-          console.log("No vendor ID found in session storage");
+        if (!storedUser) {
+          console.log("No user found in session storage");
           setError("Please login to view your orders.");
           setLoading(false);
           return;
         }
 
+        const user = JSON.parse(storedUser);
+        console.log("Parsed user:", user);
+
+        // Check if user exists and has required fields
+        if (!user?._id) {
+          console.log("No vendor ID found in session storage");
+          setError("Invalid user session. Please login again.");
+          setLoading(false);
+          return;
+        }
+
+        // Role-based access control
+        if (!user.role || !ALLOWED_ROLES.includes(user.role)) {
+          console.log("User role not authorized:", user.role);
+          console.log("Allowed roles:", ALLOWED_ROLES);
+          setAccessDenied(true);
+          setError("Access denied. This page is only accessible to canteen and stationary vendors.");
+          setLoading(false);
+          return;
+        }
+
+        console.log("User authorized with role:", user.role);
         setVendorId(user._id);
         console.log("Fetching orders for vendor ID:", user._id);
 
@@ -65,13 +88,21 @@ const OrderPage = () => {
         console.error("Error response:", err.response);
         console.error("Error response data:", err.response?.data);
         
-        setError(`Failed to fetch orders: ${err.message}`);
+        // Handle specific API errors
+        if (err.response?.status === 401) {
+          setError("Session expired. Please login again.");
+        } else if (err.response?.status === 403) {
+          setAccessDenied(true);
+          setError("Access forbidden. You don't have permission to view these orders.");
+        } else {
+          setError(`Failed to fetch orders: ${err.message}`);
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOrders();
+    checkAuthAndFetchOrders();
   }, []);
 
   // Calculate order total safely
@@ -136,8 +167,37 @@ const OrderPage = () => {
     );
   }
 
-  // Error state
-  if (error) {
+  // Access denied state
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
+          <div className="mb-4">
+            <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
+          <p className="text-gray-600 mb-2">This page is restricted to:</p>
+          <ul className="text-sm text-gray-500 mb-6">
+            <li>• Canteen Vendors</li>
+            <li>• Stationary Vendors</li>
+          </ul>
+          <div className="flex flex-col gap-3">
+            <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              Login with Vendor Account
+            </Link>
+            <Link href="/dashboard" className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state (for other errors)
+  if (error && !accessDenied) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">

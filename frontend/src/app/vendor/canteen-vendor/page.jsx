@@ -1,29 +1,87 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import axios from "@/lib/axios";
 
 export default function CanteenVendorPage({ darkMode }) {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const router = useRouter();
   const role = "canteen-vendor";
 
+  // Define unallowed roles - these roles cannot access this page
+  const UNALLOWED_ROLES = ['stationary-vendor', 'canteen-vendor'];
+
   useEffect(() => {
-    async function fetchCanteenVendors() {
+    const checkAuthAndLoadPage = async () => {
       try {
-        const res = await axios.get(`/user/vendor/${role}`);
-        console.log("Canteen vendors API response:", res.data);
-        setVendors(res.data.filteruser || []);
+        // Get user information from session
+        const storedUser = sessionStorage.getItem("user");
+        console.log("Raw stored user:", storedUser);
+        
+        if (!storedUser) {
+          console.log("No user found in session storage");
+          setError("Please login to access the canteen vendors.");
+          setLoading(false);
+          return;
+        }
+
+        const user = JSON.parse(storedUser);
+        console.log("Parsed user:", user);
+
+        // Check if user exists and has required fields
+        if (!user?._id) {
+          console.log("No user ID found in session storage");
+          setError("Invalid user session. Please login again.");
+          setLoading(false);
+          return;
+        }
+
+        // Role-based access control - block vendor roles
+        if (user.role && UNALLOWED_ROLES.includes(user.role)) {
+          console.log("User role blocked:", user.role);
+          console.log("Blocked roles:", UNALLOWED_ROLES);
+          setAccessDenied(true);
+          setError("Access denied. Vendors cannot access this customer page.");
+          setLoading(false);
+          return;
+        }
+
+        console.log("User authorized with role:", user.role);
+        setUserId(user._id);
+        setUserRole(user.role);
+
+        // Only fetch vendors after authentication is successful
+        await fetchCanteenVendors();
+
       } catch (err) {
-        console.error("Error loading canteen vendors:", err);
-      } finally {
+        console.error("Error during authentication check:", err);
+        setError("Authentication check failed. Please login again.");
         setLoading(false);
       }
-    }
+    };
 
-    fetchCanteenVendors();
+    checkAuthAndLoadPage();
   }, []);
+
+  // Separate function to fetch vendors
+  const fetchCanteenVendors = async () => {
+    try {
+      const res = await axios.get(`/user/vendor/${role}`);
+      console.log("Canteen vendors API response:", res.data);
+      setVendors(res.data.filteruser || []);
+    } catch (err) {
+      console.error("Error loading canteen vendors:", err);
+      setError("Failed to load canteen vendors. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleVendorClick = (vendorId) => {
     console.log("Navigating to canteen vendor:", vendorId);
@@ -34,11 +92,98 @@ export default function CanteenVendorPage({ darkMode }) {
     router.push('/vendor');
   };
 
+  // Loading state
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-        <p className="text-center text-gray-500 mt-4">Loading canteen vendors...</p>
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode ? "bg-gray-900" : "bg-gray-100"
+      }`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className={darkMode ? "text-gray-300" : "text-gray-600"}>
+            {accessDenied ? "Checking permissions..." : "Loading canteen vendors..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Access denied state
+  if (accessDenied) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode ? "bg-gray-900" : "bg-gray-100"
+      }`}>
+        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md ${
+          darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
+        }`}>
+          <div className="mb-4">
+            <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+          <p className={`mb-2 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+            This page is restricted from:
+          </p>
+          <ul className={`text-sm mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+            <li>• Canteen Vendors</li>
+            <li>• Stationary Vendors</li>
+          </ul>
+          <p className={`text-xs mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+            This is a customer-only page for browsing canteen vendors.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link href="/vendor-dashboard" className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors">
+              Go to Vendor Dashboard
+            </Link>
+            <Link href="/dashboard" className={`px-6 py-2 rounded-lg transition-colors ${
+              darkMode 
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600" 
+                : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+            }`}>
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state (for other errors)
+  if (error && !accessDenied) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode ? "bg-gray-900" : "bg-gray-100"
+      }`}>
+        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md ${
+          darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
+        }`}>
+          <div className="mb-4">
+            <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Error</h2>
+          <p className={`mb-6 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+            {error}
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+            >
+              Try Again
+            </button>
+            <Link href="/login" className={`px-6 py-2 rounded-lg transition-colors ${
+              darkMode 
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600" 
+                : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+            }`}>
+              Go to Login
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -46,6 +191,19 @@ export default function CanteenVendorPage({ darkMode }) {
   return (
     <main className={`min-h-screen p-6 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
       <div className="max-w-7xl mx-auto">
+        {/* Debug Info (remove in production) */}
+        <div className={`mb-6 p-4 rounded-lg border ${
+          darkMode 
+            ? "bg-green-900 border-green-700 text-green-200" 
+            : "bg-green-50 border-green-200 text-green-700"
+        }`}>
+          <h3 className="text-sm font-semibold mb-2">✅ Customer Access Granted:</h3>
+          <p className="text-xs">User Role: {userRole}</p>
+          <p className="text-xs">User ID: {userId}</p>
+          <p className="text-xs">Viewing: Canteen Vendors</p>
+          <p className="text-xs">Access Type: Customer browsing canteen vendors</p>
+        </div>
+
         {/* Header Section */}
         <div className="mb-8">
           <button

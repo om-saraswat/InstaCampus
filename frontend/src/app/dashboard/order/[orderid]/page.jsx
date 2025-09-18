@@ -12,30 +12,82 @@ const OrderEditPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [vendorId, setVendorId] = useState(null);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  // Define allowed roles
+  const ALLOWED_ROLES = ['canteen-vendor', 'stationary-vendor'];
 
   useEffect(() => {
-    // Get vendor information from session
-    const storedUser = sessionStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
-    if (user?._id) {
-      setVendorId(user._id);
-    }
+    const checkAuthAndFetchOrder = async () => {
+      try {
+        // Get user information from session
+        const storedUser = sessionStorage.getItem("user");
+        console.log("Raw stored user:", storedUser);
+        
+        if (!storedUser) {
+          console.log("No user found in session storage");
+          setError("Please login to view order details.");
+          setLoading(false);
+          return;
+        }
 
-    if (!orderid) return;
+        const user = JSON.parse(storedUser);
+        console.log("Parsed user:", user);
 
-    console.log("Fetching order details for:", orderid);
+        // Check if user exists and has required fields
+        if (!user?._id) {
+          console.log("No vendor ID found in session storage");
+          setError("Invalid user session. Please login again.");
+          setLoading(false);
+          return;
+        }
 
-    api
-      .get(`/order/${orderid}`)
-      .then((res) => {
-        console.log("API response:", res.data);
-        setOrder(res.data.order || res.data);
-      })
-      .catch((err) => {
+        // Role-based access control
+        if (!user.role || !ALLOWED_ROLES.includes(user.role)) {
+          console.log("User role not authorized:", user.role);
+          console.log("Allowed roles:", ALLOWED_ROLES);
+          setAccessDenied(true);
+          setError("Access denied. This page is only accessible to canteen and stationary vendors.");
+          setLoading(false);
+          return;
+        }
+
+        console.log("User authorized with role:", user.role);
+        setVendorId(user._id);
+
+        if (!orderid) {
+          setError("Order ID is missing.");
+          setLoading(false);
+          return;
+        }
+
+        console.log("Fetching order details for:", orderid);
+
+        // Fetch order details
+        const response = await api.get(`/order/${orderid}`);
+        console.log("API response:", response.data);
+        setOrder(response.data.order || response.data);
+
+      } catch (err) {
         console.error("Error fetching order:", err);
-        setError("Failed to load order details.");
-      })
-      .finally(() => setLoading(false));
+        
+        // Handle specific API errors
+        if (err.response?.status === 401) {
+          setError("Session expired. Please login again.");
+        } else if (err.response?.status === 403) {
+          setAccessDenied(true);
+          setError("Access forbidden. You don't have permission to view this order.");
+        } else if (err.response?.status === 404) {
+          setError("Order not found.");
+        } else {
+          setError("Failed to load order details.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuthAndFetchOrder();
   }, [orderid]);
 
   // Get status color
@@ -100,8 +152,40 @@ const OrderEditPage = () => {
     );
   }
 
-  // Error state
-  if (error || !order) {
+  // Access denied state
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
+          <div className="mb-4">
+            <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
+          <p className="text-gray-600 mb-2">This page is restricted to:</p>
+          <ul className="text-sm text-gray-500 mb-6">
+            <li>• Canteen Vendors</li>
+            <li>• Stationary Vendors</li>
+          </ul>
+          <div className="flex flex-col gap-3">
+            <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              Login with Vendor Account
+            </Link>
+            <button
+              onClick={() => router.back()}
+              className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state (for other errors)
+  if (error && !accessDenied) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
@@ -110,8 +194,39 @@ const OrderEditPage = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <div className="flex flex-col gap-3">
+            {error.includes("login") ? (
+              <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                Go to Login
+              </Link>
+            ) : (
+              <button
+                onClick={() => router.back()}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Go Back
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Order not found
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
+          <div className="mb-4">
+            <svg className="w-16 h-16 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Order Not Found</h2>
-          <p className="text-gray-600 mb-6">{error || "The order you're looking for doesn't exist."}</p>
+          <p className="text-gray-600 mb-6">The order you're looking for doesn't exist or has been removed.</p>
           <button
             onClick={() => router.back()}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -331,7 +446,15 @@ const OrderEditPage = () => {
                   Print Order
                 </button>
                 <button
-                  onClick={() => navigator.clipboard.writeText(order._id)}
+                  onClick={() => {
+                    navigator.clipboard.writeText(order._id).then(() => {
+                      const successMessage = document.createElement('div');
+                      successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                      successMessage.textContent = 'Order ID copied!';
+                      document.body.appendChild(successMessage);
+                      setTimeout(() => document.body.removeChild(successMessage), 2000);
+                    });
+                  }}
                   className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
                 >
                   Copy Order ID
