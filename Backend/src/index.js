@@ -10,14 +10,16 @@ const cors = require("cors");
 // CORS configuration - MUST be before routes
 app.use(
   cors({
-    origin: [, "http://localhost:3000", "https://insta-campus-lac.vercel.app"],
+    origin: [
+      "http://localhost:3000",               // local dev
+      "https://insta-campus-lac.vercel.app", // your Vercel frontend
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
     exposedHeaders: ["Set-Cookie"],
   })
 );
-
 app.use(cookieParser());
 app.use(express.json());
 
