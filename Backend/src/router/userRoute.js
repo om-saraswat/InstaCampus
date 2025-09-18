@@ -16,7 +16,21 @@ router.get("/" ,userAuth, async (req,res) => {
         res.status(400).json({message: Err.message})
     }
 })
+router.get("/vendor/:role",userAuth,async(req,res) =>{
+    try{
+        const user = await User.find({}).select("-password");
+        const role = req.params.role
+         if(!user){
+            throw new Error("User not found");
+        }
+        const filteruser = user.filter(u => u.role===role);
+        res.json({filteruser})
 
+    }
+    catch(err){
+        res.status(400).send("error occured" + err);
+    }
+})
 router.patch("/",userAuth, async(req,res) =>{
     const user = req.user;
     try{

@@ -95,8 +95,18 @@ export default function LoginPage() {
 
       // Redirect to StudentDashboard
       setTimeout(() => {
-        window.location.href = "/student/dashboard";
-      }, 1000);
+  if (user?.role === "student") {
+    window.location.href = "/vendor";
+  } else if (
+    user?.role === "canteen-vendor" || 
+    user?.role === "stationary-vendor"
+  ) {
+    window.location.href = "/vendor/dashboard";
+  } else {
+    console.warn("Unknown role:", user?.role);
+    window.location.href = "/"; // fallback (maybe home)
+  }
+}, 1000);
     } catch (err) {
       console.error("Login error:", err, "Response:", err.response?.data);
       if (err.response?.status === 404) {

@@ -1,8 +1,13 @@
 import React from "react";
 import { X } from "lucide-react";
+<<<<<<< HEAD
 import { sampleProducts } from "../data/sampleProducts";
 
 export default function FilterSidebar({
+=======
+
+function FilterSidebar({
+>>>>>>> a6d82530bd172e7179f93804be06f3a7d4157093
   darkMode,
   showFilters,
   setShowFilters,
@@ -10,15 +15,34 @@ export default function FilterSidebar({
   setPriceRange,
   selectedCategories,
   setSelectedCategories,
+<<<<<<< HEAD
 }) {
   if (!showFilters) return null;
 
+=======
+  sampleProducts,
+}) {
+  if (!showFilters) return null;
+
+  // get unique categories from sampleProducts
+  const uniqueCategories = Object.values(sampleProducts)
+    .flat()
+    .reduce((acc, product) => {
+      if (!acc.includes(product.category)) acc.push(product.category);
+      return acc;
+    }, []);
+
+>>>>>>> a6d82530bd172e7179f93804be06f3a7d4157093
   return (
     <aside
       className={`${
         darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
       } border-l fixed top-16 bottom-0 w-80 p-4 transition-all duration-300 ease-in-out z-40 overflow-y-auto`}
     >
+<<<<<<< HEAD
+=======
+      {/* Header */}
+>>>>>>> a6d82530bd172e7179f93804be06f3a7d4157093
       <div className="flex items-center justify-between mb-4">
         <h3
           className={`text-lg font-semibold ${
@@ -60,7 +84,14 @@ export default function FilterSidebar({
               type="number"
               value={priceRange[0]}
               onChange={(e) =>
+<<<<<<< HEAD
                 setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])
+=======
+                setPriceRange([
+                  parseInt(e.target.value) || 0,
+                  priceRange[1],
+                ])
+>>>>>>> a6d82530bd172e7179f93804be06f3a7d4157093
               }
               className={`w-full px-2 py-1 text-xs rounded border ${
                 darkMode
@@ -73,7 +104,14 @@ export default function FilterSidebar({
               type="number"
               value={priceRange[1]}
               onChange={(e) =>
+<<<<<<< HEAD
                 setPriceRange([priceRange[0], parseInt(e.target.value) || 2000])
+=======
+                setPriceRange([
+                  priceRange[0],
+                  parseInt(e.target.value) || 2000,
+                ])
+>>>>>>> a6d82530bd172e7179f93804be06f3a7d4157093
               }
               className={`w-full px-2 py-1 text-xs rounded border ${
                 darkMode
@@ -95,6 +133,7 @@ export default function FilterSidebar({
         >
           Categories
         </label>
+<<<<<<< HEAD
         {Object.values(sampleProducts)
           .flat()
           .reduce((acc, product) => {
@@ -126,7 +165,39 @@ export default function FilterSidebar({
               </span>
             </div>
           ))}
+=======
+        {uniqueCategories.map((category) => (
+          <div key={category} className="flex items-center space-x-2 mb-2">
+            <input
+              type="checkbox"
+              checked={selectedCategories.has(category)}
+              onChange={(e) => {
+                const newSelected = new Set(selectedCategories);
+                if (e.target.checked) {
+                  newSelected.add(category);
+                } else {
+                  newSelected.delete(category);
+                }
+                setSelectedCategories(newSelected);
+              }}
+              className="w-4 h-4 text-indigo-600"
+            />
+            <span
+              className={`text-sm ${
+                darkMode ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              {category}
+            </span>
+          </div>
+        ))}
+>>>>>>> a6d82530bd172e7179f93804be06f3a7d4157093
       </div>
     </aside>
   );
 }
+<<<<<<< HEAD
+=======
+
+export default FilterSidebar;
+>>>>>>> a6d82530bd172e7179f93804be06f3a7d4157093
