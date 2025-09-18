@@ -74,17 +74,14 @@ export default function RegisterPage() {
         department: form.department,
       };
 
-      const response = await api.post("/signup", payload);
+      const response = await api.post("/auth/signup", payload);
 
       // Log response for debugging
       console.log("Full API response:", response.data);
 
       // Handle different response structures
       let message;
-      if (
-        response.data.success ||
-        response.data.message === "User registered successfully"
-      ) {
+      if (response.data.success) {
         message =
           response.data.message ||
           "Account created successfully! Check your email.";
@@ -92,7 +89,7 @@ export default function RegisterPage() {
         throw new Error(response.data.message);
       } else {
         throw new Error(
-          `Invalid response structure: Expected success or specific message, got ${JSON.stringify(
+          `Invalid response structure: Expected success and message, got ${JSON.stringify(
             response.data
           )}`
         );
@@ -152,6 +149,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col relative">
+      {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           className={`absolute inset-0 ${
@@ -173,6 +171,7 @@ export default function RegisterPage() {
                 : "bg-white/50 border-gray-200/50"
             } backdrop-blur-md rounded-lg border p-6 sm:p-8 shadow-md transition-all duration-300 hover:shadow-lg`}
           >
+            {/* Header */}
             <div className="text-center mb-6">
               <div className="relative group mx-auto mb-5">
                 <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md transform group-hover:scale-105 transition-all duration-300">
@@ -195,6 +194,7 @@ export default function RegisterPage() {
               </p>
             </div>
 
+            {/* Status Messages */}
             {error && (
               <div
                 className={`mb-5 p-3 rounded-lg border-l-4 ${
@@ -225,7 +225,9 @@ export default function RegisterPage() {
               </div>
             )}
 
+            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Name */}
               <div className="space-y-1">
                 <label
                   className={`block text-sm font-medium ${
@@ -252,6 +254,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* Email */}
               <div className="space-y-1">
                 <label
                   className={`block text-sm font-medium ${
@@ -278,6 +281,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* Role */}
               <div className="space-y-1">
                 <label
                   className={`block text-sm font-medium ${
@@ -314,6 +318,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* ID */}
               {form.role && (
                 <div className="space-y-1">
                   <label
@@ -346,6 +351,7 @@ export default function RegisterPage() {
                 </div>
               )}
 
+              {/* Department */}
               {form.role && (
                 <div className="space-y-1">
                   <label
@@ -376,6 +382,7 @@ export default function RegisterPage() {
                 </div>
               )}
 
+              {/* Password */}
               <div className="space-y-1">
                 <label
                   className={`block text-sm font-medium ${
@@ -402,6 +409,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* Confirm Password */}
               <div className="space-y-1">
                 <label
                   className={`block text-sm font-medium ${
@@ -428,6 +436,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* Terms */}
               <div className="flex items-start space-x-2">
                 <input
                   type="checkbox"
@@ -459,6 +468,7 @@ export default function RegisterPage() {
                 </label>
               </div>
 
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={isLoading || !isFormValid}
