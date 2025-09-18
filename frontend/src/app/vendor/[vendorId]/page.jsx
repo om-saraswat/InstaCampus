@@ -11,6 +11,18 @@ export default function VendorProductsPage({ darkMode }) {
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cartOpen, setCartOpen] = useState(false);
+  const [priceRange, setPriceRange] = useState([0, 2000]);
+  const [selectedCategories, setSelectedCategories] = useState(new Set());
+
+  const filteredProducts = products.filter((product) => {
+  const inPriceRange =
+    product.price >= priceRange[0] && product.price <= priceRange[1];
+
+  const inCategory =
+    selectedCategories.size === 0 || selectedCategories.has(product.category);
+
+  return inPriceRange && inCategory;
+});
 
   const params = useParams();
   const router = useRouter();
@@ -135,9 +147,9 @@ const addToCart = async (productId) => {
         </div>
 
         {/* Products Grid */}
-        {products.length > 0 ? (
+        {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <div
                 key={product._id}
                 className={`border rounded-lg p-3 transition-all hover:shadow-lg ${
@@ -194,7 +206,7 @@ const addToCart = async (productId) => {
       </main>
 
       {/* ✅ Fixed Sidebar (Cart / Navigation) */}
-      <Sidebar cartOpen={cartOpen} setCartOpen={setCartOpen} />
+      <Sidebar cartOpen={cartOpen} setCartOpen={setCartOpen} priceRange={priceRange} setPriceRange={setPriceRange} selectedCategories={selectedCategories} setSelectedCategories={setSelectedCategories}/>
     </div>
   );
 }

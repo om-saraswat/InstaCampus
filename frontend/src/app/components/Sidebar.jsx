@@ -13,14 +13,20 @@ import {
   X,
 } from "lucide-react";
 
-function Sidebar() {
+function Sidebar({
+  cartOpen,
+  setCartOpen,
+  priceRange,
+  setPriceRange,
+  selectedCategories,
+  setSelectedCategories,
+}) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { darkMode } = useTheme();
   const router = useRouter();
 
   const [activeCategory, setActiveCategory] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 2000]);
-  const [selectedCategories, setSelectedCategories] = useState(new Set());
+
   
   // Cart data for each category
   const [cartData, setCartData] = useState({
@@ -472,7 +478,7 @@ useEffect(() => {
                       onChange={(e) =>
                         setPriceRange([
                           parseInt(e.target.value) || 0,
-                          priceRange[1],
+                          priceRange[1]
                         ])
                       }
                       className={`w-full px-2 py-1 text-xs rounded border ${
