@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import axios from "@/lib/axios";
 
 export default function VendorProductsPage({ darkMode }) {
@@ -9,43 +10,25 @@ export default function VendorProductsPage({ darkMode }) {
   const [loading, setLoading] = useState(true);
   const params = useParams();
   const router = useRouter();
-  const vendorId = params.vendorId || params.id; // Handle different param names
+  const vendorId = params.vendorId || params.id;
 
   useEffect(() => {
     async function fetchVendorProducts() {
       try {
-        console.log("=== DEBUG INFO ===");
-        console.log("Full params object:", params);
-        console.log("Extracted vendorId:", vendorId);
-        console.log("API URL will be:", `/product/vendor/${vendorId}`);
-        
-        if (!vendorId || vendorId === 'undefined') {
-          console.error("❌ No valid vendorId found!");
+        if (!vendorId || vendorId === "undefined") {
           setLoading(false);
           return;
         }
-        
-        // Updated to match your working API endpoint
+
         const productsRes = await axios.get(`/product/vendor/${vendorId}`);
-        console.log("✅ API Response Status:", productsRes.status);
-        console.log("✅ API Response Data:", productsRes.data);
-        
-        // Based on your Postbot response, the structure is { products: [...] }
+
         if (productsRes.data && productsRes.data.products) {
-          console.log("✅ Found products:", productsRes.data.products.length);
           setProducts(productsRes.data.products);
         } else {
-          console.warn("⚠️ No products array found in response");
-          console.log("Response structure:", Object.keys(productsRes.data));
           setProducts([]);
         }
-        
       } catch (err) {
         console.error("❌ Error loading vendor products:", err.message);
-        if (err.response) {
-          console.error("Response status:", err.response.status);
-          console.error("Response data:", err.response.data);
-        }
         setProducts([]);
       } finally {
         setLoading(false);
@@ -55,7 +38,6 @@ export default function VendorProductsPage({ darkMode }) {
     if (vendorId) {
       fetchVendorProducts();
     } else {
-      console.error("❌ No vendorId found in params:", params);
       setLoading(false);
     }
   }, [vendorId]);
@@ -72,8 +54,42 @@ export default function VendorProductsPage({ darkMode }) {
 
   return (
     <main className="flex-1 p-4">
-      {/* Header */}
-      <div className="mb-6">
+      {/* 🔹 Top Header Bar */}
+      {/* 🔹 Full-width Header with two halves */}
+<div
+  className={`grid grid-cols-2 w-full ${
+    darkMode ? "bg-gray-900" : "bg-gray-200"
+  }`}
+  style={{ height: "80px" }} // making it big and visible
+>
+  {/* Left Half - Canteen */}
+  <Link
+    href="/vendor/canteen-vendor"
+    className={`flex items-center justify-center text-2xl font-bold ${
+      darkMode
+        ? "text-white hover:text-indigo-400"
+        : "text-gray-800 hover:text-indigo-600"
+    }`}
+  >
+    Canteen
+  </Link>
+
+  {/* Right Half - Stationary */}
+  <Link
+    href="/vendor/stationary-vendor"
+    className={`flex items-center justify-center text-2xl font-bold ${
+      darkMode
+        ? "text-white hover:text-indigo-400"
+        : "text-gray-800 hover:text-indigo-600"
+    }`}
+  >
+    Stationary
+  </Link>
+</div>
+
+
+      {/* Page Content */}
+      <div className="mb-6 mt-4">
         <button
           onClick={handleBackToVendors}
           className={`mb-4 px-4 py-2 rounded-lg transition-colors ${
@@ -84,7 +100,7 @@ export default function VendorProductsPage({ darkMode }) {
         >
           ← Back to Vendors
         </button>
-        
+
         <h1
           className={`text-2xl font-bold ${
             darkMode ? "text-white" : "text-gray-900"
@@ -110,13 +126,14 @@ export default function VendorProductsPage({ darkMode }) {
               }`}
             >
               <img
-                src={product.imgUrl}
+                src={product.imgUrl || "/default-product.svg"}
                 alt={product.name}
                 className="w-full h-40 object-cover rounded"
                 onError={(e) => {
-                  e.target.src = "/placeholder-image.png"; // Add a placeholder image
+                  e.currentTarget.src = "/default-product.svg";
                 }}
               />
+
               <h4
                 className={`mt-2 font-medium ${
                   darkMode ? "text-white" : "text-gray-900"
@@ -126,17 +143,16 @@ export default function VendorProductsPage({ darkMode }) {
               </h4>
               <p className="text-sm text-gray-500">{product.category}</p>
               <p className="text-indigo-600 font-bold">₹{product.price}</p>
-              
+
               {product.description && (
                 <p className="text-sm text-gray-400 mt-1 line-clamp-2">
                   {product.description}
                 </p>
               )}
-              
+
               <button
                 className="mt-2 w-full bg-indigo-600 text-white py-1 px-3 rounded text-sm hover:bg-indigo-700 transition-colors"
                 onClick={() => {
-                  // Add to cart or view product details logic here
                   console.log("Add to cart:", product._id);
                 }}
               >
