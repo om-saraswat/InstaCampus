@@ -111,4 +111,75 @@ router.post("/clear/:category", userAuth, async (req, res) => {
     }
 });
 
+router.put("/update-item", userAuth, async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { productId, quantity, category } = req.body;
+
+        if (quantity < 1) {
+            return res.status(400).json({ error: "Quantity must be at least 1" });
+        }
+
+        const cart = await Cart.findOne({ userId, category });
+        if (!cart) {
+            return res.status(404).json({ error: "Cart not found" });
+        }
+
+        const itemIndex = cart.items.findIndex(item => item.productId.equals(productId));
+        if (itemIndex === -1) {
+            return res.status(404).json({ error: "Item not found in cart" });
+        }
+
+        // Check inventory
+        const inventoryItem = await Inventory.findOne({ productId });
+        if (!inventoryItem || inventoryItem.quantityAvailable < quantity) {
+            return res.status(400).json({ error: `Only ${inventoryItem?.quantityAvailable || 0} units available` });
+        }
+
+        cart.items[itemIndex].quantity = quantity;
+        await cart.save();
+
+        // Populate and send back the updated cart
+        const updatedCart = await Cart.findById(cart._id)
+            .populate({ path: "items.productId", select: "name price imgUrl" })
+            .populate("vendorId", "name");
+
+        res.status(200).json(updatedCart);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// NEW: ROUTE TO REMOVE AN ITEM
+router.delete("/remove-item", userAuth, async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { productId, category } = req.body; // Get category from body
+
+        let cart = await Cart.findOne({ userId, category });
+        if (!cart) {
+            return res.status(404).json({ error: "Cart not found" });
+        }
+        
+        // Filter out the item to be removed
+        cart.items = cart.items.filter(item => !item.productId.equals(productId));
+        
+        // If the cart becomes empty, clear the vendorId as well
+        if (cart.items.length === 0) {
+            cart.vendorId = null;
+        }
+        
+        await cart.save();
+
+        // Populate and send back the updated cart
+        const updatedCart = await Cart.findById(cart._id)
+            .populate({ path: "items.productId", select: "name price imgUrl" })
+            .populate("vendorId", "name");
+
+        res.status(200).json(updatedCart);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
