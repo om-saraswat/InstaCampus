@@ -60,8 +60,6 @@ router.post("/from-cart/:category", userAuth, async (req, res) => {
     }
 });
 
-
-
 router.get("/",userAuth, async (req, res) => {
     const orders = await Order.find({ userId: req.user._id })
         .populate("items.productId", "name price")
