@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "@/lib/axios";
-import CartSidebar from "@/app/components/CartSidebar";
+
 import Sidebar from "@/app/components/Sidebar";
 
 export default function VendorProductsPage({ darkMode }) {
