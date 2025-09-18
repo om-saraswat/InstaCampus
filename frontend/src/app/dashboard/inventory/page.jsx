@@ -414,7 +414,7 @@ const InventoryPage = () => {
                       <div className="flex justify-between items-center mb-2">
                         <span className={`text-sm ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Price:</span>
                         <span className={`font-bold text-lg ${effectiveDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                          ${(product?.price || 0).toFixed(2)}
+                          ₹{(product?.price || 0).toFixed(2)}
                         </span>
                       </div>
                       

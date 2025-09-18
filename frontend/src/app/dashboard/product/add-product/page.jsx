@@ -79,7 +79,7 @@ const AddProductPage = () => {
 
     try {
       await api.post("/product", formData); // POST request to your backend
-      router.push("/vendor/dashboard/product"); // redirect to product list after success
+      router.push("/dashboard/product"); // redirect to product list after success
     } catch (err) {
       console.error(err);
       setError(

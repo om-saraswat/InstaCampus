@@ -425,7 +425,7 @@ const VendorOrderDetailPage = () => {
                     <div className="flex-1">
                       <h4 className={`font-semibold ${effectiveDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>{item.productId?.name || "Unknown Product"}</h4>
                       <p className={`${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
-                        ${(item.productId?.price || 0).toFixed(2)} × {item.quantity || 0}
+                        ₹{(item.productId?.price || 0).toFixed(2)} × {item.quantity || 0}
                       </p>
                       {item.productId?.description && (
                         <p className={`${effectiveDarkMode ? 'text-gray-400' : 'text-gray-500'} text-xs mt-1`}>{item.productId.description}</p>
@@ -433,7 +433,7 @@ const VendorOrderDetailPage = () => {
                     </div>
                     <div className="text-right">
                       <p className={`font-bold text-lg ${effectiveDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-                        ${((item.productId?.price || 0) * (item.quantity || 0)).toFixed(2)}
+                        ₹{((item.productId?.price || 0) * (item.quantity || 0)).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -445,7 +445,7 @@ const VendorOrderDetailPage = () => {
                 <div className="flex justify-between items-center">
                   <span className={`text-lg font-semibold ${effectiveDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Total Amount:</span>
                   <span className={`text-2xl font-bold ${effectiveDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                    ${vendorItems
+                    ₹{vendorItems
                       .reduce((sum, item) => sum + ((item.productId?.price || 0) * (item.quantity || 0)), 0)
                       .toFixed(2)}
                   </span>

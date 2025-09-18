@@ -360,7 +360,7 @@ const OrderPage = () => {
                           {item.productId?.name || item.productName || 'Unknown Product'} × {item.quantity || 0}
                         </span>
                         <span className={`${effectiveDarkMode ? 'text-gray-100' : 'text-gray-800'} font-medium`}>
-                          ${((item.productId?.price || item.price || 0) * (item.quantity || 0)).toFixed(2)}
+                          ₹{((item.productId?.price || item.price || 0) * (item.quantity || 0)).toFixed(2)}
                         </span>
                       </div>
                     )) || (
@@ -374,7 +374,7 @@ const OrderPage = () => {
                   <div className="flex justify-between items-center">
                     <span className={`font-semibold ${effectiveDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Total:</span>
                     <span className={`font-bold text-lg ${effectiveDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                      ${calculateOrderTotal(order).toFixed(2)}
+                      ₹{calculateOrderTotal(order).toFixed(2)}
                     </span>
                   </div>
                   

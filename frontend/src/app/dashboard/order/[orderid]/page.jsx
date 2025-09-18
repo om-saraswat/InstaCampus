@@ -411,7 +411,7 @@ const OrderEditPage = () => {
                     </div>
                     <div className="text-right">
                       <p className={`font-bold text-lg ${effectiveDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-                        ${((item.productId?.price || item.price || 0) * (item.quantity || 0)).toFixed(2)}
+                        ₹{((item.productId?.price || item.price || 0) * (item.quantity || 0)).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -425,24 +425,24 @@ const OrderEditPage = () => {
                 <div className="space-y-2">
                   <div className={`flex justify-between ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     <span>Subtotal:</span>
-                    <span>${calculateOrderTotal().toFixed(2)}</span>
+                    <span>₹{calculateOrderTotal().toFixed(2)}</span>
                   </div>
                   {order.shippingCost && (
                     <div className={`flex justify-between ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       <span>Shipping:</span>
-                      <span>${order.shippingCost.toFixed(2)}</span>
+                      <span>₹{order.shippingCost.toFixed(2)}</span>
                     </div>
                   )}
                   {order.tax && (
                     <div className={`flex justify-between ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       <span>Tax:</span>
-                      <span>${order.tax.toFixed(2)}</span>
+                      <span>₹{order.tax.toFixed(2)}</span>
                     </div>
                   )}
                   <div className={`flex justify-between items-center pt-2 border-t ${effectiveDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
                     <span className={`text-lg font-semibold ${effectiveDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Total Amount:</span>
                     <span className={`text-2xl font-bold ${effectiveDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                      ${(calculateOrderTotal() + (order.shippingCost || 0) + (order.tax || 0)).toFixed(2)}
+                      ₹{(calculateOrderTotal() + (order.shippingCost || 0) + (order.tax || 0)).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -497,7 +497,7 @@ const OrderEditPage = () => {
               <h3 className={`text-lg font-semibold ${effectiveDarkMode ? 'text-gray-100' : 'text-gray-800'} mb-4`}>Quick Actions</h3>
               <div className="space-y-3">
                 <button
-                  onClick={() => router.push(`/dashboard/order/recent/${order._id}/edit`)}
+                  onClick={() => router.push(`/dashboard/order/recent/${order._id}`)}
                   className={`w-full ${effectiveDarkMode ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white px-4 py-2 rounded-lg transition-colors text-sm`}
                 >
                   Edit Order

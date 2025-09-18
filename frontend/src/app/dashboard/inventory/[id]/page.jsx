@@ -724,7 +724,7 @@ const InventoryUpdatePage = () => {
                       effectiveDarkMode ? "text-blue-400" : "text-blue-600"
                     }`}
                   >
-                    ${(product?.price || 0).toFixed(2)}
+                    ₹{(product?.price || 0).toFixed(2)}
                   </span>
                 </div>
 

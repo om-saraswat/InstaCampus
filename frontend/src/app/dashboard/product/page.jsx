@@ -256,7 +256,7 @@ const ProductPage = () => {
                   </p>
                   <div className="flex justify-between items-center">
                     <p className={`text-lg font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                      ${product.price || '0.00'}
+                      ₹{product.price || '0.00'}
                     </p>
                     {product.stock !== undefined && (
                       <span className={`text-xs px-2 py-1 rounded-full ${

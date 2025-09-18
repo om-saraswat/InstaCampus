@@ -64,7 +64,7 @@ export default function EditProductPage({ darkMode }) {
       const res = await axios.patch(`/product/${productId}`, form);
       alert(res.data.message || "Product updated successfully");
       // Optionally redirect back to vendor page
-      router.push("/vendor/stationary-vendor"); // adjust as needed
+      router.push("/dashboard/product"); // adjust as needed
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.error || "Failed to update product");
@@ -81,7 +81,7 @@ export default function EditProductPage({ darkMode }) {
     try {
       const res = await axios.delete(`/product/${productId}`);
       alert(res.data.message || "Product deleted successfully");
-      router.push("/vendor/stationary-vendor"); // adjust redirect as needed
+      router.push("/dashboard/product"); // adjust redirect as needed
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.error || "Failed to delete product");
