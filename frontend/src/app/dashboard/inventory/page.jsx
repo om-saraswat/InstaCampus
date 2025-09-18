@@ -1,10 +1,60 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useTheme } from "../../context/ThemeProvider";
 import api from "@/lib/axios";
 import Link from "next/link";
 
 const InventoryPage = () => {
+  const { darkMode } = useTheme();
+  
+  // Force component to re-render when localStorage changes
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // Listen for theme changes in localStorage
+  useEffect(() => {
+    const handleThemeChange = () => {
+      // Force re-render by updating a dummy state
+      setMounted(prev => !prev);
+    };
+    
+    // Listen for storage events (theme changes from other tabs/components)
+    window.addEventListener('storage', handleThemeChange);
+    
+    // Also listen for manual localStorage changes in same tab
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function(key, value) {
+      const result = originalSetItem.apply(this, arguments);
+      if (key === 'theme') {
+        setTimeout(handleThemeChange, 0); // Async to avoid infinite loops
+      }
+      return result;
+    };
+    
+    return () => {
+      window.removeEventListener('storage', handleThemeChange);
+      localStorage.setItem = originalSetItem;
+    };
+  }, []);
+  
+  // Get theme directly from localStorage as backup
+  const [localStorageTheme, setLocalStorageTheme] = useState(false);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const theme = localStorage.getItem('theme');
+      const isDark = theme === 'true' || theme === '"true"';
+      setLocalStorageTheme(isDark);
+    }
+  }, [mounted]);
+  
+  // Use localStorage theme if context theme seems wrong
+  const effectiveDarkMode = darkMode ?? localStorageTheme;
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -112,14 +162,14 @@ const InventoryPage = () => {
     }
   };
 
-  // Get stock status color based on quantityAvailable and lowStockThreshold
+  // Get stock status color based on quantityAvailable and lowStockThreshold with dark mode support
   const getStockStatusColor = (quantityAvailable, lowStockThreshold = 10) => {
     if (quantityAvailable === 0) {
-      return 'bg-red-100 text-red-800';
+      return effectiveDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800';
     } else if (quantityAvailable <= lowStockThreshold) {
-      return 'bg-yellow-100 text-yellow-800';
+      return effectiveDarkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800';
     } else {
-      return 'bg-green-100 text-green-800';
+      return effectiveDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800';
     }
   };
 
@@ -134,28 +184,55 @@ const InventoryPage = () => {
     }
   };
 
-  // Get category color
+  // Get category color with dark mode support
   const getCategoryColor = (category) => {
-    const colors = {
-      'electronics': 'bg-blue-100 text-blue-800',
-      'clothing': 'bg-purple-100 text-purple-800',
-      'food': 'bg-orange-100 text-orange-800',
-      'books': 'bg-indigo-100 text-indigo-800',
-      'home': 'bg-teal-100 text-teal-800',
-      'sports': 'bg-green-100 text-green-800',
-      'beauty': 'bg-pink-100 text-pink-800',
-      'toys': 'bg-yellow-100 text-yellow-800',
-    };
-    return colors[category?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+    if (effectiveDarkMode) {
+      const darkColors = {
+        'electronics': 'bg-blue-900/30 text-blue-400',
+        'clothing': 'bg-purple-900/30 text-purple-400',
+        'food': 'bg-orange-900/30 text-orange-400',
+        'books': 'bg-indigo-900/30 text-indigo-400',
+        'home': 'bg-teal-900/30 text-teal-400',
+        'sports': 'bg-green-900/30 text-green-400',
+        'beauty': 'bg-pink-900/30 text-pink-400',
+        'toys': 'bg-yellow-900/30 text-yellow-400',
+      };
+      return darkColors[category?.toLowerCase()] || 'bg-gray-700 text-gray-300';
+    } else {
+      const lightColors = {
+        'electronics': 'bg-blue-100 text-blue-800',
+        'clothing': 'bg-purple-100 text-purple-800',
+        'food': 'bg-orange-100 text-orange-800',
+        'books': 'bg-indigo-100 text-indigo-800',
+        'home': 'bg-teal-100 text-teal-800',
+        'sports': 'bg-green-100 text-green-800',
+        'beauty': 'bg-pink-100 text-pink-800',
+        'toys': 'bg-yellow-100 text-yellow-800',
+      };
+      return lightColors[category?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Get stock text color with dark mode support
+  const getStockTextColor = (quantity, lowStockThreshold = 10) => {
+    if (effectiveDarkMode) {
+      if (quantity === 0) return 'text-red-400';
+      if (quantity <= lowStockThreshold) return 'text-yellow-400';
+      return 'text-green-400';
+    } else {
+      if (quantity === 0) return 'text-red-600';
+      if (quantity <= lowStockThreshold) return 'text-yellow-600';
+      return 'text-green-600';
+    }
   };
 
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className={`min-h-screen ${effectiveDarkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center transition-colors`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading inventory...</p>
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${effectiveDarkMode ? 'border-blue-400' : 'border-blue-600'} mx-auto mb-4`}></div>
+          <p className={effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}>Loading inventory...</p>
         </div>
       </div>
     );
@@ -164,24 +241,24 @@ const InventoryPage = () => {
   // Access denied state
   if (accessDenied) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
+      <div className={`min-h-screen ${effectiveDarkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center transition-colors`}>
+        <div className={`text-center ${effectiveDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'} rounded-2xl shadow-lg p-8 max-w-md`}>
           <div className="mb-4">
             <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
-          <p className="text-gray-600 mb-2">This page is restricted to:</p>
-          <ul className="text-sm text-gray-500 mb-6">
+          <h2 className={`text-xl font-semibold ${effectiveDarkMode ? 'text-gray-100' : 'text-gray-800'} mb-2`}>Access Denied</h2>
+          <p className={`${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-2`}>This page is restricted to:</p>
+          <ul className={`text-sm ${effectiveDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-6`}>
             <li>• Canteen Vendors</li>
             <li>• Stationary Vendors</li>
           </ul>
           <div className="flex flex-col gap-3">
-            <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <Link href="/login" className={`${effectiveDarkMode ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white px-6 py-2 rounded-lg transition-colors`}>
               Login with Vendor Account
             </Link>
-            <Link href="/dashboard" className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+            <Link href="/dashboard" className={`${effectiveDarkMode ? 'bg-gray-600 hover:bg-gray-500 text-gray-200' : 'bg-gray-300 hover:bg-gray-400 text-gray-700'} px-6 py-2 rounded-lg transition-colors`}>
               Back to Dashboard
             </Link>
           </div>
@@ -193,16 +270,16 @@ const InventoryPage = () => {
   // Error state (for other errors)
   if (error && !accessDenied) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
+      <div className={`min-h-screen ${effectiveDarkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center transition-colors`}>
+        <div className={`text-center ${effectiveDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'} rounded-2xl shadow-lg p-8 max-w-md`}>
           <div className="mb-4">
             <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Error</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <h2 className={`text-xl font-semibold ${effectiveDarkMode ? 'text-gray-100' : 'text-gray-800'} mb-2`}>Error</h2>
+          <p className={`${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>{error}</p>
+          <Link href="/login" className={`${effectiveDarkMode ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white px-6 py-2 rounded-lg transition-colors`}>
             Go to Login
           </Link>
         </div>
@@ -211,18 +288,18 @@ const InventoryPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className={`min-h-screen ${effectiveDarkMode ? 'bg-gray-900' : 'bg-gray-100'} p-6 transition-colors`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Inventory Management</h1>
-            <p className="text-gray-600">Manage your products and track inventory levels</p>
+            <h1 className={`text-3xl font-bold ${effectiveDarkMode ? 'text-gray-100' : 'text-gray-800'} mb-2`}>Inventory Management</h1>
+            <p className={effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}>Manage your products and track inventory levels</p>
           </div>
           
           <div className="flex flex-wrap gap-3 mt-4 sm:mt-0">
             <Link href="/dashboard/product/add-product">
-              <button className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-6 py-3 rounded-2xl shadow-lg transition-colors flex items-center gap-2 cursor-pointer ">
+              <button className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-6 py-3 rounded-2xl shadow-lg transition-colors flex items-center gap-2 cursor-pointer hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
@@ -231,7 +308,7 @@ const InventoryPage = () => {
             </Link>
             
             <Link href="/dashboard">
-              <button className="bg-gray-600 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-gray-700 transition-colors cursor-pointer ">
+              <button className={`${effectiveDarkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-600 hover:bg-gray-700'} text-white px-6 py-3 rounded-2xl shadow-lg transition-colors cursor-pointer`}>
                 Back to Dashboard
               </button>
             </Link>
@@ -239,25 +316,26 @@ const InventoryPage = () => {
         </div>
 
         {/* Debug Info (remove in production) */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <h3 className="text-sm font-semibold text-yellow-800 mb-2">Debug Info:</h3>
-          <p className="text-xs text-yellow-700">Vendor ID: {vendorId}</p>
-          <p className="text-xs text-yellow-700">Products Count: {products.length}</p>
-          <p className="text-xs text-yellow-700">Products Type: {Array.isArray(products) ? 'Array' : typeof products}</p>
+        <div className={`${effectiveDarkMode ? 'bg-yellow-900/20 border-yellow-700' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-4 mb-6`}>
+          <h3 className={`text-sm font-semibold ${effectiveDarkMode ? 'text-yellow-200' : 'text-yellow-800'} mb-2`}>Debug Info:</h3>
+          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Vendor ID: {vendorId}</p>
+          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Products Count: {products.length}</p>
+          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Products Type: {Array.isArray(products) ? 'Array' : typeof products}</p>
+          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Dark Mode: {effectiveDarkMode ? 'Enabled' : 'Disabled'}</p>
         </div>
 
         {/* Inventory Grid */}
         {products.length === 0 ? (
-          <div className="text-center bg-white rounded-2xl shadow-lg p-12">
+          <div className={`text-center ${effectiveDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'} rounded-2xl shadow-lg p-12 transition-colors`}>
             <div className="mb-6">
-              <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-16 h-16 ${effectiveDarkMode ? 'text-gray-600' : 'text-gray-300'} mx-auto mb-4`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Products Found</h3>
-            <p className="text-gray-500 mb-6">You don't have any products in your inventory yet. Add products to start managing your inventory.</p>
+            <h3 className={`text-xl font-semibold ${effectiveDarkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>No Products Found</h3>
+            <p className={`${effectiveDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-6`}>You don't have any products in your inventory yet. Add products to start managing your inventory.</p>
             <Link href="/dashboard/product/add-product">
-              <button className="bg-green-600 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-green-700 transition-colors">
+              <button className={`${effectiveDarkMode ? 'bg-green-500 hover:bg-green-600' : 'bg-green-600 hover:bg-green-700'} text-white px-6 py-3 rounded-2xl shadow-lg transition-colors`}>
                 Add Your First Product
               </button>
             </Link>
@@ -273,10 +351,10 @@ const InventoryPage = () => {
                 <Link
                   key={inventoryItem._id}
                   href={`/dashboard/inventory/${inventoryItem._id}`}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                  className={`${effectiveDarkMode ? 'bg-gray-800 border border-gray-700 hover:shadow-gray-900/50' : 'bg-white hover:shadow-2xl'} rounded-2xl shadow-lg overflow-hidden transition-all duration-300 transform hover:-translate-y-1`}
                 >
                   {/* Product Image */}
-                  <div className="relative h-48 bg-gray-200">
+                  <div className={`relative h-48 ${effectiveDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     {product?.imgUrl ? (
                       <img
                         src={product.imgUrl}
@@ -285,7 +363,7 @@ const InventoryPage = () => {
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full">
-                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className={`w-12 h-12 ${effectiveDarkMode ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </div>
@@ -303,7 +381,7 @@ const InventoryPage = () => {
                     {/* Product Header */}
                     <div className="mb-4">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-semibold text-gray-800 text-lg line-clamp-2">
+                        <h3 className={`font-semibold ${effectiveDarkMode ? 'text-gray-100' : 'text-gray-800'} text-lg line-clamp-2`}>
                           {product?.name || 'Unknown Product'}
                         </h3>
                       </div>
@@ -317,7 +395,7 @@ const InventoryPage = () => {
                         </div>
                       )}
                       
-                      <p className="text-sm text-gray-500">
+                      <p className={`text-sm ${effectiveDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                         Product ID: {product?._id?.slice(-8) || 'N/A'}
                       </p>
                     </div>
@@ -325,7 +403,7 @@ const InventoryPage = () => {
                     {/* Product Description */}
                     {product?.description && (
                       <div className="mb-4">
-                        <p className="text-sm text-gray-600 line-clamp-2">
+                        <p className={`text-sm ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'} line-clamp-2`}>
                           {product.description}
                         </p>
                       </div>
@@ -334,34 +412,30 @@ const InventoryPage = () => {
                     {/* Price and Stock Info */}
                     <div className="mb-4">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-gray-600">Price:</span>
-                        <span className="font-bold text-lg text-blue-600">
+                        <span className={`text-sm ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Price:</span>
+                        <span className={`font-bold text-lg ${effectiveDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
                           ${(product?.price || 0).toFixed(2)}
                         </span>
                       </div>
                       
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-gray-600">Stock:</span>
-                        <span className={`font-semibold ${
-                          quantity === 0 ? 'text-red-600' :
-                          quantity <= lowStockThreshold ? 'text-yellow-600' :
-                          'text-green-600'
-                        }`}>
+                        <span className={`text-sm ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Stock:</span>
+                        <span className={`font-semibold ${getStockTextColor(quantity, lowStockThreshold)}`}>
                           {quantity} units
                         </span>
                       </div>
                       
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-gray-600">Low Stock Alert:</span>
-                        <span className="text-sm text-gray-800">
+                        <span className={`text-sm ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Low Stock Alert:</span>
+                        <span className={`text-sm ${effectiveDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                           {lowStockThreshold} units
                         </span>
                       </div>
                       
                       {inventoryItem.lastRestockedAT && (
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Last Restocked:</span>
-                          <span className="text-sm text-gray-800">
+                          <span className={`text-sm ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Last Restocked:</span>
+                          <span className={`text-sm ${effectiveDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                             {formatDate(inventoryItem.lastRestockedAT)}
                           </span>
                         </div>
@@ -369,8 +443,8 @@ const InventoryPage = () => {
                     </div>
 
                     {/* Additional Info */}
-                    <div className="border-t pt-3 mb-4">
-                      <div className="flex justify-between text-xs text-gray-500">
+                    <div className={`border-t ${effectiveDarkMode ? 'border-gray-600' : 'border-gray-200'} pt-3 mb-4`}>
+                      <div className={`flex justify-between text-xs ${effectiveDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                         <span>Added: {formatDate(product?.createdAt)}</span>
                         {product?.updatedAt && (
                           <span>Updated: {formatDate(product.updatedAt)}</span>
@@ -380,7 +454,7 @@ const InventoryPage = () => {
 
                     {/* Action indicator */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center text-blue-600 text-sm">
+                      <div className={`flex items-center ${effectiveDarkMode ? 'text-blue-400' : 'text-blue-600'} text-sm`}>
                         <span>Update Inventory</span>
                         <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -388,7 +462,7 @@ const InventoryPage = () => {
                       </div>
                       
                       {/* Stock indicator */}
-                      <div className="text-xs text-gray-500">
+                      <div className={`text-xs ${effectiveDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                         ID: {inventoryItem._id.slice(-6)}
                       </div>
                     </div>

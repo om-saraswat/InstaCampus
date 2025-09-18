@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "@/lib/axios";
+import { useTheme } from "../../context/ThemeProvider"; // Update this import path
 
-export default function CanteenVendorPage({ darkMode }) {
+export default function CanteenVendorPage() {
+  const { darkMode } = useTheme(); // Use the theme context instead of prop
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -95,12 +97,12 @@ export default function CanteenVendorPage({ darkMode }) {
   // Loading state
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-200 ${
         darkMode ? "bg-gray-900" : "bg-gray-100"
       }`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className={darkMode ? "text-gray-300" : "text-gray-600"}>
+          <p className={`transition-colors duration-200 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
             {accessDenied ? "Checking permissions..." : "Loading canteen vendors..."}
           </p>
         </div>
@@ -111,10 +113,10 @@ export default function CanteenVendorPage({ darkMode }) {
   // Access denied state
   if (accessDenied) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-200 ${
         darkMode ? "bg-gray-900" : "bg-gray-100"
       }`}>
-        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md ${
+        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md transition-colors duration-200 ${
           darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
         }`}>
           <div className="mb-4">
@@ -123,21 +125,21 @@ export default function CanteenVendorPage({ darkMode }) {
             </svg>
           </div>
           <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-          <p className={`mb-2 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+          <p className={`mb-2 transition-colors duration-200 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
             This page is restricted from:
           </p>
-          <ul className={`text-sm mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+          <ul className={`text-sm mb-6 transition-colors duration-200 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
             <li>• Canteen Vendors</li>
             <li>• Stationary Vendors</li>
           </ul>
-          <p className={`text-xs mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+          <p className={`text-xs mb-6 transition-colors duration-200 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
             This is a customer-only page for browsing canteen vendors.
           </p>
           <div className="flex flex-col gap-3">
-            <Link href="/vendor-dashboard" className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors">
+            <Link href="/vendor-dashboard" className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors duration-200">
               Go to Vendor Dashboard
             </Link>
-            <Link href="/dashboard" className={`px-6 py-2 rounded-lg transition-colors ${
+            <Link href="/dashboard" className={`px-6 py-2 rounded-lg transition-colors duration-200 ${
               darkMode 
                 ? "bg-gray-700 text-gray-300 hover:bg-gray-600" 
                 : "bg-gray-300 text-gray-700 hover:bg-gray-400"
@@ -153,10 +155,10 @@ export default function CanteenVendorPage({ darkMode }) {
   // Error state (for other errors)
   if (error && !accessDenied) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-200 ${
         darkMode ? "bg-gray-900" : "bg-gray-100"
       }`}>
-        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md ${
+        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md transition-colors duration-200 ${
           darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
         }`}>
           <div className="mb-4">
@@ -165,17 +167,17 @@ export default function CanteenVendorPage({ darkMode }) {
             </svg>
           </div>
           <h2 className="text-xl font-semibold mb-2">Error</h2>
-          <p className={`mb-6 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+          <p className={`mb-6 transition-colors duration-200 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
             {error}
           </p>
           <div className="flex flex-col gap-3">
             <button
               onClick={() => window.location.reload()}
-              className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+              className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors duration-200"
             >
               Try Again
             </button>
-            <Link href="/login" className={`px-6 py-2 rounded-lg transition-colors ${
+            <Link href="/login" className={`px-6 py-2 rounded-lg transition-colors duration-200 ${
               darkMode 
                 ? "bg-gray-700 text-gray-300 hover:bg-gray-600" 
                 : "bg-gray-300 text-gray-700 hover:bg-gray-400"
@@ -189,10 +191,10 @@ export default function CanteenVendorPage({ darkMode }) {
   }
 
   return (
-    <main className={`min-h-screen p-6 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
+    <main className={`min-h-screen p-6 transition-colors duration-200 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
       <div className="max-w-7xl mx-auto">
         {/* Debug Info (remove in production) */}
-        <div className={`mb-6 p-4 rounded-lg border ${
+        <div className={`mb-6 p-4 rounded-lg border transition-colors duration-200 ${
           darkMode 
             ? "bg-green-900 border-green-700 text-green-200" 
             : "bg-green-50 border-green-200 text-green-700"
@@ -208,7 +210,7 @@ export default function CanteenVendorPage({ darkMode }) {
         <div className="mb-8">
           <button
             onClick={handleBackToCategories}
-            className={`mb-6 flex items-center px-4 py-2 rounded-lg transition-colors ${
+            className={`mb-6 flex items-center px-4 py-2 rounded-lg transition-colors duration-200 ${
               darkMode
                 ? "bg-gray-800 text-white hover:bg-gray-700 border border-gray-700"
                 : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 shadow-sm"
@@ -220,10 +222,10 @@ export default function CanteenVendorPage({ darkMode }) {
             Back to Categories
           </button>
           
-          <h1 className={`text-4xl font-bold mb-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
+          <h1 className={`text-4xl font-bold mb-3 transition-colors duration-200 ${darkMode ? "text-white" : "text-gray-900"}`}>
             🍽️ Canteen Vendors
           </h1>
-          <p className={`text-lg ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+          <p className={`text-lg transition-colors duration-200 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
             Discover delicious food options from our campus canteen vendors
           </p>
         </div>
@@ -264,7 +266,7 @@ export default function CanteenVendorPage({ darkMode }) {
                 
                 {/* Content Section */}
                 <div className="p-5">
-                  <h4 className={`text-xl font-semibold mb-2 group-hover:text-orange-600 transition-colors ${
+                  <h4 className={`text-xl font-semibold mb-2 group-hover:text-orange-600 transition-colors duration-200 ${
                     darkMode ? "text-white" : "text-gray-900"
                   }`}>
                     {vendor.name}
@@ -275,7 +277,9 @@ export default function CanteenVendorPage({ darkMode }) {
                   </p>
                   
                   {vendor.email && (
-                    <p className="text-sm text-gray-400 truncate mb-3 flex items-center">
+                    <p className={`text-sm truncate mb-3 flex items-center transition-colors duration-200 ${
+                      darkMode ? "text-gray-500" : "text-gray-400"
+                    }`}>
                       <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                         <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
@@ -286,7 +290,9 @@ export default function CanteenVendorPage({ darkMode }) {
                   
                   {/* Canteen-specific info */}
                   {vendor.location && (
-                    <p className="text-xs text-gray-500 mb-3 flex items-center">
+                    <p className={`text-xs mb-3 flex items-center transition-colors duration-200 ${
+                      darkMode ? "text-gray-500" : "text-gray-500"
+                    }`}>
                       <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                       </svg>
@@ -313,17 +319,19 @@ export default function CanteenVendorPage({ darkMode }) {
         ) : (
           <div className="text-center py-20">
             <div className="text-8xl mb-6 opacity-50">🍽️</div>
-            <h3 className={`text-2xl font-semibold mb-3 ${
+            <h3 className={`text-2xl font-semibold mb-3 transition-colors duration-200 ${
               darkMode ? "text-gray-300" : "text-gray-700"
             }`}>
               No canteen vendors found
             </h3>
-            <p className="text-gray-500 mb-8 max-w-md mx-auto">
+            <p className={`mb-8 max-w-md mx-auto transition-colors duration-200 ${
+              darkMode ? "text-gray-500" : "text-gray-500"
+            }`}>
               We're working on adding more delicious food vendors. Check back soon for tasty options!
             </p>
             <button
               onClick={handleBackToCategories}
-              className="px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               Explore Other Categories
             </button>

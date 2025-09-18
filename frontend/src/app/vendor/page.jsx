@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useTheme } from "../context/ThemeProvider"; // Update this import path
 
-export default function VendorPage({ darkMode }) {
+export default function VendorPage() {
+  const { darkMode } = useTheme(); // Use the theme context instead of prop
   const [imageErrors, setImageErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,12 +92,12 @@ export default function VendorPage({ darkMode }) {
   // Loading state
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-200 ${
         darkMode ? "bg-gray-900" : "bg-gray-100"
       }`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className={darkMode ? "text-gray-300" : "text-gray-600"}>
+          <p className={`transition-colors duration-200 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
             Loading vendor hub...
           </p>
         </div>
@@ -106,10 +108,10 @@ export default function VendorPage({ darkMode }) {
   // Access denied state
   if (accessDenied) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-200 ${
         darkMode ? "bg-gray-900" : "bg-gray-100"
       }`}>
-        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md ${
+        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md transition-colors duration-200 ${
           darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
         }`}>
           <div className="mb-4">
@@ -118,18 +120,18 @@ export default function VendorPage({ darkMode }) {
             </svg>
           </div>
           <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-          <p className={`mb-2 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+          <p className={`mb-2 transition-colors duration-200 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
             This page is restricted to:
           </p>
-          <ul className={`text-sm mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+          <ul className={`text-sm mb-6 transition-colors duration-200 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
             <li>• Canteen Vendors</li>
             <li>• Stationary Vendors</li>
           </ul>
           <div className="flex flex-col gap-3">
-            <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
               Login with Vendor Account
             </Link>
-            <Link href="/dashboard" className={`px-6 py-2 rounded-lg transition-colors ${
+            <Link href="/dashboard" className={`px-6 py-2 rounded-lg transition-colors duration-200 ${
               darkMode 
                 ? "bg-gray-700 text-gray-300 hover:bg-gray-600" 
                 : "bg-gray-300 text-gray-700 hover:bg-gray-400"
@@ -145,10 +147,10 @@ export default function VendorPage({ darkMode }) {
   // Error state (for other errors)
   if (error && !accessDenied) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-200 ${
         darkMode ? "bg-gray-900" : "bg-gray-100"
       }`}>
-        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md ${
+        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md transition-colors duration-200 ${
           darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
         }`}>
           <div className="mb-4">
@@ -157,10 +159,10 @@ export default function VendorPage({ darkMode }) {
             </svg>
           </div>
           <h2 className="text-xl font-semibold mb-2">Error</h2>
-          <p className={`mb-6 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+          <p className={`mb-6 transition-colors duration-200 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
             {error}
           </p>
-          <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
             Go to Login
           </Link>
         </div>
@@ -170,12 +172,12 @@ export default function VendorPage({ darkMode }) {
 
   return (
     <div
-      className={`min-h-screen flex flex-col items-center justify-center p-6 ${
+      className={`min-h-screen flex flex-col items-center justify-center p-6 transition-colors duration-200 ${
         darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
       {/* Debug Info (remove in production) */}
-      <div className={`w-full max-w-6xl mb-6 p-4 rounded-lg border ${
+      <div className={`w-full max-w-6xl mb-6 p-4 rounded-lg border transition-colors duration-200 ${
         darkMode 
           ? "bg-yellow-900 border-yellow-700 text-yellow-200" 
           : "bg-yellow-50 border-yellow-200 text-yellow-700"
@@ -189,10 +191,10 @@ export default function VendorPage({ darkMode }) {
       {/* Header Section */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">🏪 Vendor Hub</h1>
-        <p className={`text-lg ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+        <p className={`text-lg transition-colors duration-200 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
           Discover amazing vendors across different categories
         </p>
-        <p className={`text-sm mt-2 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+        <p className={`text-sm mt-2 transition-colors duration-200 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
           Welcome, {userRole === 'canteen-vendor' ? 'Canteen' : 'Stationary'} Vendor!
         </p>
       </div>
@@ -209,17 +211,16 @@ export default function VendorPage({ darkMode }) {
           >
             {/* Image Background */}
             <div className="relative h-64 overflow-hidden">
-              <img
-                src={category.img}
-                alt={category.name}
-                className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity duration-300 group-hover:scale-110"
-                onError={(e) => {
-                  // Fallback to gradient background if image fails
-                  e.target.style.display = 'none';
-                  e.target.parentElement.classList.add('bg-gradient-to-br', 'from-indigo-500', 'to-purple-600');
-                  handleImageError(category.name);
-                }}
-              />
+              {!imageErrors[category.name] ? (
+                <img
+                  src={category.img}
+                  alt={category.name}
+                  className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity duration-300 group-hover:scale-110"
+                  onError={() => handleImageError(category.name)}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600"></div>
+              )}
               
               {/* Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent group-hover:from-black/40 transition-all duration-300"></div>
@@ -239,12 +240,12 @@ export default function VendorPage({ darkMode }) {
             </div>
 
             {/* Bottom Section */}
-            <div className={`p-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+            <div className={`p-4 transition-colors duration-200 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
               <div className="flex items-center justify-between">
-                <span className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                <span className={`text-sm font-medium transition-colors duration-200 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
                   Explore Vendors
                 </span>
-                <div className="text-indigo-500 group-hover:text-indigo-600 transition-colors">
+                <div className="text-indigo-500 group-hover:text-indigo-600 transition-colors duration-200">
                   <svg 
                     className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" 
                     fill="none" 
@@ -262,11 +263,11 @@ export default function VendorPage({ darkMode }) {
 
       {/* Call to Action */}
       <div className="mt-16 text-center">
-        <p className={`text-lg mb-6 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+        <p className={`text-lg mb-6 transition-colors duration-200 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
           Can't find what you're looking for?
         </p>
         <button 
-          className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           onClick={() => {
             // Add logic to request new vendor category or contact admin
             alert("Feature coming soon! Contact admin to request new vendor categories.");
