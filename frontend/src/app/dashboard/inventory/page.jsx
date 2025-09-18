@@ -162,7 +162,7 @@ const InventoryPage = () => {
           
           <div className="flex flex-wrap gap-3 mt-4 sm:mt-0">
             <Link href="/dashboard/product/add-product">
-              <button className="bg-green-600 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+              <button className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-6 py-3 rounded-2xl shadow-lg transition-colors flex items-center gap-2 cursor-pointer ">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
@@ -180,7 +180,7 @@ const InventoryPage = () => {
             </Link>
             
             <Link href="/vendor/dashboard">
-              <button className="bg-gray-600 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-gray-700 transition-colors">
+              <button className="bg-gray-600 text-white px-6 py-3 rounded-2xl shadow-lg hover:bg-gray-700 transition-colors cursor-pointer ">
                 Back to Dashboard
               </button>
             </Link>
