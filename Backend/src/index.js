@@ -10,7 +10,7 @@ const cors = require("cors");
 // CORS configuration - MUST be before routes
 app.use(
   cors({
-    origin: [, "http://localhost:3000", "https://localhost:5000"],
+    origin: [, "http://localhost:3000", "https://insta-campus-lac.vercel.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
