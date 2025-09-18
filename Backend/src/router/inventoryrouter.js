@@ -10,19 +10,23 @@ const Inventory = require("../models/Inventory");
 router.get("/", vendorauth, async (req, res) => {
   try {
     const vendor = req.user;
-    let category;
-    if (vendor.role === "canteen-vendor") {
-      category = "canteen";
-    } else if (vendor.role === "stationary-vendor") {
-      category = "stationary";
-    } else {
+
+    // Ensure vendor role is valid
+    if (!["canteen-vendor", "stationary-vendor"].includes(vendor.role)) {
       throw new Error("Invalid vendor role");
     }
 
-    // Find all products in this category
-    const products = await Inventory.find({productId});
+    // Find all products created by this vendor
+    const products = await Product.find({ vendorid: vendor._id });
 
-    res.status(200).json({ products });
+    // Extract product IDs
+    const productIds = products.map((p) => p._id);
+
+    // Find inventory for those product IDs
+    const inventory = await Inventory.find({ productId: { $in: productIds } })
+      .populate("productId"); // populate product details
+
+    res.status(200).json({ inventory });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

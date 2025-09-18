@@ -6,34 +6,45 @@ const {vendorauth, userAuth}= require("../middleware/auth")
 const mongoose = require("mongoose"); 
 const Inventory = require("../models/Inventory");
 
-router.post("/",vendorauth,async(req,res) => {
-    try{
-        const {name,category,description,price,imgUrl,lowStockThreshold} = req.body;
-        
-        if(req.user.role === "canteen-vendor" && category !== "canteen"){
-            throw new Error("Canteen vendor can only add Food and Drinks category products");
-        }
-        if(req.user.role === "stationary-vendor" && category !== "stationary"){
-            throw new Error("Stationary vendor can only add stationary and Xeros category products");
-        }
-        
-        
+router.post("/", vendorauth, async (req, res) => {
+  try {
+    const { name, category, description, price, imgUrl, lowStockThreshold } = req.body;
 
-        const product = new Product({
-            name,
-            category,
-            description,
-            price,
-            imgUrl,
-            lowStockThreshold,
-            vendorid : req.user._id
-        });
-        await product.save();
-        res.status(201).json({product,message : "Product added successfully"});
+    // Role-based category validation
+    if (req.user.role === "canteen-vendor" && category !== "canteen") {
+      throw new Error("Canteen vendor can only add Food and Drinks category products");
     }
-    catch(Err){
-        res.status(400).send(Err);
+    if (req.user.role === "stationary-vendor" && category !== "stationary") {
+      throw new Error("Stationary vendor can only add stationary category products");
     }
+
+    // Create Product
+    const product = new Product({
+      name,
+      category,
+      description,
+      price,
+      imgUrl,
+      lowStockThreshold,
+      vendorid: req.user._id,
+    });
+    await product.save();
+
+    // Create Inventory entry with quantity = 0
+    const inventory = new Inventory({
+      productId: product._id,
+      quantityAvailable: 0, // default zero
+    });
+    await inventory.save();
+
+    res.status(201).json({
+      product,
+      inventory,
+      message: "Product and Inventory created successfully",
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 router.get("/vendor/:vendorid", userAuth, async(req, res) => {
