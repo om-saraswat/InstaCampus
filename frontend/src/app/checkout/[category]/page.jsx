@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from '../../../lib/axios'; // Correctly import the custom Axios instance
+import axios from '../../../lib/axios'; 
 import { Loader, AlertCircle, ArrowLeft, Lock } from 'lucide-react';
 
 const CheckoutPage = () => {

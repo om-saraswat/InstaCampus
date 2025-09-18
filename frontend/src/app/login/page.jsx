@@ -101,7 +101,7 @@ export default function LoginPage() {
     user?.role === "canteen-vendor" || 
     user?.role === "stationary-vendor"
   ) {
-    window.location.href = "/vendor/dashboard";
+    window.location.href = "/dashboard";
   } else {
     console.warn("Unknown role:", user?.role);
     window.location.href = "/"; // fallback (maybe home)
