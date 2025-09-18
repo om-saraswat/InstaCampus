@@ -12,6 +12,7 @@ export default function EditProductPage({ darkMode }) {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -72,11 +73,32 @@ export default function EditProductPage({ darkMode }) {
     }
   };
 
+  // Delete product
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+
+    setDeleting(true);
+    try {
+      const res = await axios.delete(`/product/${productId}`);
+      alert(res.data.message || "Product deleted successfully");
+      router.push("/vendor/stationary-vendor"); // adjust redirect as needed
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || "Failed to delete product");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) return <p className="text-center mt-10">Loading product...</p>;
 
   return (
     <div className="max-w-3xl mx-auto p-4">
-      <h1 className={`text-2xl font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
+      <h1
+        className={`text-2xl font-bold mb-4 ${
+          darkMode ? "text-white" : "text-gray-900"
+        }`}
+      >
         Edit Product
       </h1>
 
@@ -146,7 +168,9 @@ export default function EditProductPage({ darkMode }) {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">Low Stock Threshold</label>
+            <label className="block mb-1 font-medium">
+              Low Stock Threshold
+            </label>
             <input
               type="number"
               name="lowStockThreshold"
@@ -157,13 +181,24 @@ export default function EditProductPage({ darkMode }) {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={updating}
-            className="px-4 py-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded hover:bg-indigo-700 cursor-pointer "
-          >
-            {updating ? "Updating..." : "Update Product"}
-          </button>
+          <div className="flex gap-4 mt-4">
+            <button
+              type="submit"
+              disabled={updating}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded hover:bg-indigo-700 cursor-pointer"
+            >
+              {updating ? "Updating..." : "Update Product"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer"
+            >
+              {deleting ? "Deleting..." : "Delete Product"}
+            </button>
+          </div>
         </form>
       )}
     </div>
