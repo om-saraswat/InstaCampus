@@ -192,28 +192,25 @@ const CartPage = () => {
           <div className="lg:col-span-1">
             <div className={`p-6 rounded-lg shadow-sm sticky top-24 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
               <h3 className="text-xl font-semibold border-b pb-3 mb-4 dark:border-gray-700">Order Summary</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span className="font-medium">₹{totals.subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Taxes (5%)</span>
-                  <span className="font-medium">₹{totals.tax.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between font-bold text-lg border-t pt-3 mt-3 dark:border-gray-700">
+              {/* ... (price details) ... */}
+              <div className="flex justify-between font-bold text-lg border-t pt-3 mt-3 dark:border-gray-700">
                   <span>Total</span>
                   <span>₹{totals.total.toFixed(2)}</span>
-                </div>
               </div>
-              <button className="w-full mt-6 bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-all">
-                Proceed to Checkout
-              </button>
+
+              {/* THIS IS THE UPDATED PART */}
+              <Link href={`/order`} className="block w-full mt-6">
+                <button className="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-all">
+                  Proceed to Checkout
+                </button>
+              </Link>
+              
               <button onClick={handleClearCart} className="w-full mt-3 text-sm text-red-500 hover:text-red-700 transition-colors">
                 Clear Cart
               </button>
             </div>
           </div>
+
         </div>
       </div>
     </div>
