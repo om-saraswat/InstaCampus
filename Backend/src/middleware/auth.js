@@ -12,7 +12,7 @@ const userAuth = async (req, res, next) => {
     if (!user) {
       throw new Error("User not found");
     }
-    req.user = user; // Attach user to request object
+    req.user = user;
     next();
   } catch (err) {
     res.status(401).json({ message: "Unauthorized: " + err.message });

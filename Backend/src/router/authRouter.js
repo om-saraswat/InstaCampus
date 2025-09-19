@@ -55,9 +55,9 @@ router.post("/login", async (req, res) => {
 
         res.cookie("token", token, {
   httpOnly: true,
-  sameSite: "lax",   // or "none" if using different ports with credentials
-  secure: false,     // must be false for http://localhost
-  maxAge: 24 * 60 * 60 * 1000
+  sameSite: "none",   // or "none" if using different ports with credentials
+  secure: true,     // must be false for http://localhost
+  maxAge: 24 * 60 * 60 * 1000,path:"/"
 }).status(200).json({ userObj, message: "Login Successful" });
 
     } catch (err) {
