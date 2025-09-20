@@ -16,7 +16,8 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001', 
-      'https://insta-campus-lac.vercel.app/', // Replace with your actual frontend URL // Add all your frontend URLs
+      'https://insta-campus-lac.vercel.app/',
+      'https://insta-campus-blush.vercel.app/' // Replace with your actual frontend URL // Add all your frontend URLs
     ];
     
     if (allowedOrigins.includes(origin)) {
