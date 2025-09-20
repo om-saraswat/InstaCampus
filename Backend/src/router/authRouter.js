@@ -53,12 +53,19 @@ router.post("/login", async (req, res) => {
         const userObj = user.toObject();
         delete userObj.password;
 
-        res.cookie("token", token, {
-  httpOnly: true,
-  sameSite: "none",   // or "none" if using different ports with credentials
-  secure: true,     // must be false for http://localhost
-  maxAge: 24 * 60 * 60 * 1000,path:"/"
-}).status(200).json({ userObj, message: "Login Successful" });
+        // Fixed cookie configuration
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
+            path: "/"
+        });
+
+        console.log("🍪 Cookie set with token");
+        console.log("Environment:", process.env.NODE_ENV);
+        
+        res.status(200).json({ userObj, message: "Login Successful" });
 
     } catch (err) {
         res.status(400).json({ message: err.message });

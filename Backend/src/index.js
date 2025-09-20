@@ -8,18 +8,30 @@ const axios = require("axios");
 const cors = require("cors");
 
 // CORS configuration - MUST be before routes
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",               // local dev
-      "https://insta-campus-lac.vercel.app", // your Vercel frontend
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-    exposedHeaders: ["Set-Cookie"],
-  })
-);
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'https://insta-campus-lac.vercel.app/', // Replace with your actual frontend URL // Add all your frontend URLs
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // This is CRITICAL - allows cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['set-cookie']
+};
+
+app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 
