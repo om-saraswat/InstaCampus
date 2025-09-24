@@ -9,6 +9,7 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
+  Home,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeProvider";
 import api from "../../lib/axios";
@@ -45,28 +46,28 @@ export default function LoginPage() {
 
       // Handle different possible response structures
       let token, user, message;
-        if (res.data.token && res.data.user) {
-          ({ token, user, message } = res.data);
-        } else if (res.data.data && res.data.data.token && res.data.data.user) {
-          ({ token, user, message } = res.data.data);
-        } else if (res.data.success && (res.data.token || res.data.jwt)) {
-          token = res.data.token || res.data.jwt;
-          user = res.data.user || { role: "student" };
-          message = res.data.message;
-        } else if (res.data.jwt) {
-          token = res.data.jwt;
-          user = res.data.user || { role: "student" };
-          message = res.data.message || "Login successful";
-        } else if (res.data.userObj && res.data.message) {
-          user = res.data.userObj;
-          message = res.data.message;
-          token = null;
+      
+      if (res.data.token && res.data.user) {
+        ({ token, user, message } = res.data);
+      } else if (res.data.data && res.data.data.token && res.data.data.user) {
+        ({ token, user, message } = res.data.data);
+      } else if (res.data.success && (res.data.token || res.data.jwt)) {
+        token = res.data.token || res.data.jwt;
+        user = res.data.user || { role: "student" };
+        message = res.data.message;
+      } else if (res.data.jwt) {
+        token = res.data.jwt;
+        user = res.data.user || { role: "student" };
+        message = res.data.message || "Login successful";
+      } else if (res.data.userObj && res.data.message) {
+        user = res.data.userObj;
+        message = res.data.message;
+        token = null; // Backend might be using cookies instead
         console.warn(
           "No token provided in response, proceeding with user data:",
           user
         );
-      }
-      else {
+      } else {
         throw new Error(
           `Invalid response structure: Expected token/jwt or userObj and message, got ${JSON.stringify(
             res.data
@@ -94,20 +95,24 @@ export default function LoginPage() {
 
       setSuccess(message || "Login successful! Redirecting...");
 
-      // Redirect to StudentDashboard
-  setTimeout(() => {
-    if (user?.role === "student") {
-      window.location.href = "/vendor";
-    } else if (
-      user?.role === "canteen-vendor" || 
-      user?.role === "stationary-vendor"
-    ) {
-      window.location.href = "/dashboard";
-    } else {
-      console.warn("Unknown role:", user?.role);
-      window.location.href = "/"; // fallback (maybe home)
-  }
-}, 1000);
+      // Redirect based on user role
+      setTimeout(() => {
+        switch (user?.role) {
+          case "student":
+            window.location.href = "/vendor";
+            break;
+          case "canteen-vendor":
+          case "stationary-vendor":
+            window.location.href = "/dashboard";
+            break;
+          case "admin":
+            window.location.href = "/admin";
+            break;
+          default:
+            console.warn("Unknown role:", user?.role);
+            window.location.href = "/"; // fallback to home
+        }
+      }, 1000);
     } catch (err) {
       console.error("Login error:", err, "Response:", err.response?.data);
       if (err.response?.status === 404) {
@@ -123,6 +128,10 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleHomeRedirect = () => {
+    window.location.href = "/";
   };
 
   const isFormValid = form.email && form.password;
@@ -142,7 +151,22 @@ export default function LoginPage() {
         <div className="absolute bottom-[-10%] right-[10%] w-64 h-64 sm:w-80 sm:h-80 bg-purple-500/10 rounded-full blur-2xl animate-pulse" />
       </div>
 
-      <main className="relative flex-1 flex items-center justify-center py-8 px-4 sm:py-12 pt-24">
+      {/* Home Button */}
+      <div className="relative z-10 p-4">
+        <button
+          onClick={handleHomeRedirect}
+          className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            darkMode
+              ? "bg-gray-800/50 text-white border border-gray-700 hover:bg-gray-700/50"
+              : "bg-white/50 text-gray-900 border border-gray-200 hover:bg-gray-50/70"
+          } backdrop-blur-sm shadow-sm hover:shadow-md`}
+        >
+          <Home className="w-4 h-4" />
+          <span>Home</span>
+        </button>
+      </div>
+
+      <main className="relative flex-1 flex items-center justify-center py-8 px-4 sm:py-12">
         <div className="max-w-md w-full">
           <div
             className={`${

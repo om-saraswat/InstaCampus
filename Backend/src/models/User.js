@@ -22,26 +22,36 @@ const UserSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: function () {
-        return this.role !== "student"; // Students (OAuth) don’t need password
-      },
+      required: true,
       validate: {
         validator: function (input) {
-          if (this.role !== "student" && !validator.isStrongPassword(input)) {
-            return false;
-          }
-          return true;
+          return validator.isStrongPassword(input, {
+            minLength: 6,
+            minLowercase: 1,
+            minUppercase: 0,
+            minNumbers: 0,
+            minSymbols: 0
+          });
         },
-        message: "Password is not strong enough",
+        message: "Password must be at least 6 characters long",
       },
     },
     role: {
       type: String,
       required: true,
       enum: {
-        values: ["student", "admin", "stationary-vendor","canteen-vendor"],
+        values: ["student", "admin", "stationary-vendor", "canteen-vendor"],
         message: "{VALUE} is not valid role type",
       },
+    },
+    // Add the missing fields that your frontend sends
+    studentId: {
+      type: String,
+      required: true,
+    },
+    department: {
+      type: String,
+      required: true,
     },
   },
   { timestamps: true }

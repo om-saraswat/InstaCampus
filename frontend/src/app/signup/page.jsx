@@ -10,6 +10,8 @@ import {
   ArrowRight,
   Loader2,
   UserCheck,
+  Store,
+  ShoppingBag,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeProvider";
 import api from "@/lib/axios";
@@ -86,13 +88,9 @@ export default function RegisterPage() {
           response.data.message ||
           "Account created successfully! Check your email.";
       } else if (response.data.message) {
-        throw new Error(response.data.message);
+        message = response.data.message;
       } else {
-        throw new Error(
-          `Invalid response structure: Expected success and message, got ${JSON.stringify(
-            response.data
-          )}`
-        );
+        message = "Account created successfully! You can now log in.";
       }
 
       setSuccess(message);
@@ -106,6 +104,12 @@ export default function RegisterPage() {
         department: "",
       });
       setAcceptedTerms(false);
+
+      // Redirect to login page after successful registration
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+
     } catch (err) {
       console.error("Register error:", err, "Response:", err.response?.data);
       if (err.response?.status === 404) {
@@ -132,20 +136,55 @@ export default function RegisterPage() {
 
   const roleOptions = [
     { value: "student", label: "Student", icon: GraduationCap },
-    { value: "teacher", label: "Teacher/Faculty", icon: UserCheck },
+    { value: "canteen-vendor", label: "Canteen Vendor", icon: Store },
+    { value: "stationary-vendor", label: "Stationary Vendor", icon: ShoppingBag },
     { value: "admin", label: "Administrator", icon: User },
   ];
 
   const departments = [
     "Computer Science & Engineering",
-    "Information Technology",
+    "Information Technology", 
     "Electronics & Communication",
     "Mechanical Engineering",
     "Civil Engineering",
     "Business Administration",
     "Master of Computer Applications",
+    "Canteen Services",
+    "Stationary Services",
+    "Administration",
     "Other",
   ];
+
+  // Helper function to get field label based on role
+  const getIdFieldLabel = () => {
+    switch (form.role) {
+      case "student":
+        return "Student ID";
+      case "canteen-vendor":
+        return "Vendor License ID";
+      case "stationary-vendor":
+        return "Vendor License ID";
+      case "admin":
+        return "Employee ID";
+      default:
+        return "ID";
+    }
+  };
+
+  const getIdFieldPlaceholder = () => {
+    switch (form.role) {
+      case "student":
+        return "Enter your student ID";
+      case "canteen-vendor":
+        return "Enter your canteen vendor license ID";
+      case "stationary-vendor":
+        return "Enter your stationary vendor license ID";
+      case "admin":
+        return "Enter your employee ID";
+      default:
+        return "Enter your ID";
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -290,7 +329,7 @@ export default function RegisterPage() {
                 >
                   Role
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {roleOptions.map(({ value, label, icon: Icon }) => (
                     <label key={value} className="cursor-pointer">
                       <input
@@ -326,7 +365,7 @@ export default function RegisterPage() {
                       darkMode ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
-                    {form.role === "student" ? "Student ID" : "Employee ID"}
+                    {getIdFieldLabel()}
                   </label>
                   <div className="relative group">
                     <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -340,11 +379,7 @@ export default function RegisterPage() {
                           ? "bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
                           : "bg-white/50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
                       }`}
-                      placeholder={
-                        form.role === "student"
-                          ? "Enter your student ID"
-                          : "Enter your employee ID"
-                      }
+                      placeholder={getIdFieldPlaceholder()}
                       required
                     />
                   </div>

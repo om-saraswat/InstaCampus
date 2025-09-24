@@ -63,7 +63,7 @@ const RecentOrderPage = () => {
 
   // Define allowed roles
   const ALLOWED_ROLES = ['canteen-vendor', 'stationary-vendor'];
-
+  
   useEffect(() => {
     const checkAuthAndFetchRecentOrders = async () => {
       try {
@@ -152,6 +152,11 @@ const RecentOrderPage = () => {
     };
 
     checkAuthAndFetchRecentOrders();
+
+    const intervalId = setInterval(checkAuthAndFetchRecentOrders, 60000);
+
+  // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   // Calculate order total safely
