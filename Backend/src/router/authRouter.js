@@ -4,27 +4,54 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const {userAuth} = require("../middleware/auth");
 const bcrypt = require("bcrypt");
-router.post("/signup", async(req,res) =>{
-    const {name,email,password,role} = req.body;
+
+
+router.post("/signup", async(req,res) => {
+    const {name, email, password, role, studentId, department} = req.body;
+    
+    console.log("Received signup data:", { name, email, role, studentId, department }); // Debug log
+    
     try{
-        const userChecked = await User.findOne({email: email});
-        if(userChecked){
-            throw new Error("User already exists");
+        // Validate required fields
+        if (!name || !email || !password || !role || !studentId || !department) {
+            return res.status(400).json({
+                message: "All fields are required: name, email, password, role, studentId, department"
+            });
         }
 
+        // Check if user already exists
+        const userChecked = await User.findOne({email: email});
+        if(userChecked){
+            return res.status(400).json({message: "User already exists"});
+        }
+
+        // Create new user with all required fields
         const newUser = new User({
-            email : email,
-            name : name,
-            password : password,
-            role : role
+            email: email,
+            name: name,
+            password: password,
+            role: role,
+            studentId: studentId,
+            department: department
         });
+        
         await newUser.save();
-        res.status(201).json({user: newUser, message: "User registered successfully"});
+        
+        // Remove password from response
+        const userResponse = newUser.toObject();
+        delete userResponse.password;
+        
+        res.status(201).json({
+            success: true,
+            user: userResponse, 
+            message: "User registered successfully"
+        });
     }
-    catch(Err){
-        res.status(400).json({message: Err.message});
+    catch(err){
+        console.error("Signup error:", err);
+        res.status(400).json({message: err.message});
     }
-})
+});
 
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
