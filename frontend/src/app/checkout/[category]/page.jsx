@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from '../../../lib/axios'; 
-import { Loader, AlertCircle, ArrowLeft, Lock, ShieldX } from 'lucide-react';
+import { Loader, AlertCircle, ArrowLeft, Lock, ShieldX, CheckCircle, Package } from 'lucide-react';
+import { useTheme } from '../../context/ThemeProvider';
 
 const CheckoutPage = () => {
+  const { darkMode } = useTheme();
   const [category, setCategory] = useState('');
   const [router, setRouter] = useState({ push: (path) => (window.location.href = path) });
 
@@ -146,12 +148,27 @@ const CheckoutPage = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-white dark:bg-gray-900">
-        <div className="text-center">
-          <Loader className="w-12 h-12 animate-spin text-indigo-500 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-300">
-            {accessDenied ? "Checking permissions..." : "Loading checkout..."}
-          </p>
+      <div className="min-h-screen flex flex-col relative">
+        {/* Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className={`absolute inset-0 ${
+              darkMode
+                ? "bg-gradient-to-br from-gray-900 via-indigo-900/10 to-purple-900/10"
+                : "bg-gradient-to-br from-gray-50 via-white to-gray-50"
+            } transition-colors duration-300`}
+          />
+          <div className="absolute top-[-10%] left-[10%] w-64 h-64 sm:w-80 sm:h-80 bg-indigo-500/10 rounded-full blur-2xl animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[10%] w-64 h-64 sm:w-80 sm:h-80 bg-purple-500/10 rounded-full blur-2xl animate-pulse" />
+        </div>
+        
+        <div className="relative flex-1 flex justify-center items-center">
+          <div className="text-center">
+            <Loader className="w-12 h-12 animate-spin text-indigo-500 mx-auto mb-4" />
+            <p className={`${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+              {accessDenied ? "Checking permissions..." : "Loading checkout..."}
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -160,29 +177,62 @@ const CheckoutPage = () => {
   // Access denied state
   if (accessDenied) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center rounded-2xl shadow-lg p-8 max-w-md bg-white dark:bg-gray-800 text-gray-800 dark:text-white">
-          <div className="mb-4">
-            <ShieldX className="w-16 h-16 text-red-500 mx-auto" />
-          </div>
-          <h2 className="text-xl font-semibold mb-2">Checkout Access Denied</h2>
-          <p className="mb-2 text-gray-600 dark:text-gray-300">
-            This checkout page is restricted from:
-          </p>
-          <ul className="text-sm mb-6 text-gray-500 dark:text-gray-400">
-            <li>• Canteen Vendors</li>
-            <li>• Stationary Vendors</li>
-          </ul>
-          <p className="text-xs mb-6 text-gray-500 dark:text-gray-400">
-            This is a customer-only page for placing orders and payments.
-          </p>
-          <div className="flex flex-col gap-3">
-            <a href="/vendor-dashboard" className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
-              Go to Vendor Dashboard
-            </a>
-            <a href="/dashboard" className="px-6 py-2 rounded-lg transition-colors bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-400 dark:hover:bg-gray-600">
-              Back to Dashboard
-            </a>
+      <div className="min-h-screen flex flex-col relative">
+        {/* Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className={`absolute inset-0 ${
+              darkMode
+                ? "bg-gradient-to-br from-gray-900 via-indigo-900/10 to-purple-900/10"
+                : "bg-gradient-to-br from-gray-50 via-white to-gray-50"
+            } transition-colors duration-300`}
+          />
+          <div className="absolute top-[-10%] left-[10%] w-64 h-64 sm:w-80 sm:h-80 bg-red-500/10 rounded-full blur-2xl animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[10%] w-64 h-64 sm:w-80 sm:h-80 bg-purple-500/10 rounded-full blur-2xl animate-pulse" />
+        </div>
+
+        <div className="relative flex-1 flex items-center justify-center px-4">
+          <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md ${
+            darkMode
+              ? "bg-gray-800/50 border-gray-700/50"
+              : "bg-white/50 border-gray-200/50"
+          } backdrop-blur-md border`}>
+            <div className="mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md mx-auto">
+                <ShieldX className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <h2 className={`text-xl font-semibold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+              Checkout Access Denied
+            </h2>
+            <p className={`mb-2 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+              This checkout page is restricted from:
+            </p>
+            <ul className={`text-sm mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+              <li>• Canteen Vendors</li>
+              <li>• Stationary Vendors</li>
+            </ul>
+            <p className={`text-xs mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+              This is a customer-only page for placing orders and payments.
+            </p>
+            <div className="flex flex-col gap-3">
+              <a 
+                href="/vendor-dashboard" 
+                className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-6 py-2.5 rounded-lg font-medium shadow-md hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 transform hover:scale-105"
+              >
+                Go to Vendor Dashboard
+              </a>
+              <a 
+                href="/dashboard" 
+                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-300 ${
+                  darkMode
+                    ? "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+                    : "bg-gray-200/50 text-gray-700 hover:bg-gray-300/50"
+                }`}
+              >
+                Back to Dashboard
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -192,34 +242,53 @@ const CheckoutPage = () => {
   // Error state (for other errors)
   if (error && !accessDenied) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen text-center p-4 bg-white dark:bg-gray-900">
-        <AlertCircle className="w-16 h-16 mb-4 text-red-500 dark:text-red-400" />
-        <h2 className="text-2xl font-semibold mb-2 text-gray-800 dark:text-white">
-          {error || 'Your cart is empty.'}
-        </h2>
-        {error.includes("login") ? (
-          <div className="flex flex-col gap-3 mt-4">
+      <div className="min-h-screen flex flex-col relative">
+        {/* Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className={`absolute inset-0 ${
+              darkMode
+                ? "bg-gradient-to-br from-gray-900 via-indigo-900/10 to-purple-900/10"
+                : "bg-gradient-to-br from-gray-50 via-white to-gray-50"
+            } transition-colors duration-300`}
+          />
+          <div className="absolute top-[-10%] left-[10%] w-64 h-64 sm:w-80 sm:h-80 bg-red-500/10 rounded-full blur-2xl animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[10%] w-64 h-64 sm:w-80 sm:h-80 bg-purple-500/10 rounded-full blur-2xl animate-pulse" />
+        </div>
+
+        <div className="relative flex-1 flex flex-col justify-center items-center text-center p-4">
+          <AlertCircle className="w-16 h-16 mb-4 text-red-500" />
+          <h2 className={`text-2xl font-semibold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
+            {error || 'Your cart is empty.'}
+          </h2>
+          {error.includes("login") ? (
+            <div className="flex flex-col gap-3 mt-4">
+              <a
+                href="/login"
+                className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+              >
+                Go to Login
+              </a>
+              <button
+                onClick={() => window.location.reload()}
+                className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+                  darkMode
+                    ? "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+                    : "bg-gray-200/50 text-gray-700 hover:bg-gray-300/50"
+                }`}
+              >
+                Try Again
+              </button>
+            </div>
+          ) : (
             <a
-              href="/login"
-              className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors"
+              href={`/cart/${category || ''}`}
+              className="mt-4 px-6 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
             >
-              Go to Login
+              Return to Cart
             </a>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : (
-          <a
-            href={`/cart/${category || ''}`}
-            className="mt-4 px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors"
-          >
-            Return to Cart
-          </a>
-        )}
+          )}
+        </div>
       </div>
     );
   }
@@ -227,30 +296,71 @@ const CheckoutPage = () => {
   if (!cart) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-      <div className="container mx-auto px-4 py-8">
-        {/* Debug Info (remove in production) */}
-        <div className="mb-6 p-4 rounded-lg border bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700 text-green-700 dark:text-green-200">
-          <h3 className="text-sm font-semibold mb-2">✅ Customer Checkout Access Granted:</h3>
-          <p className="text-xs">User Role: {userRole}</p>
-          <p className="text-xs">User ID: {userId}</p>
-          <p className="text-xs">Checkout Category: {category}</p>
-          <p className="text-xs">Order Total: ₹{totals.total.toFixed(2)}</p>
-          <p className="text-xs">Access Type: Customer order placement</p>
+    <div className="min-h-screen flex flex-col relative">
+      {/* Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className={`absolute inset-0 ${
+            darkMode
+              ? "bg-gradient-to-br from-gray-900 via-indigo-900/10 to-purple-900/10"
+              : "bg-gradient-to-br from-gray-50 via-white to-gray-50"
+          } transition-colors duration-300`}
+        />
+        <div className="absolute top-[-10%] left-[10%] w-64 h-64 sm:w-80 sm:h-80 bg-indigo-500/10 rounded-full blur-2xl animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[10%] w-64 h-64 sm:w-80 sm:h-80 bg-purple-500/10 rounded-full blur-2xl animate-pulse" />
+      </div>
+
+      <div className="relative container mx-auto px-4 py-8">
+        {/* Debug Info */}
+        <div className={`mb-6 p-4 rounded-lg border-l-4 ${
+          darkMode
+            ? "bg-green-900/20 border-green-500 text-green-300"
+            : "bg-green-50/80 border-green-400 text-green-600"
+        }`}>
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-semibold mb-1">✅ Customer Checkout Access Granted:</h3>
+              <p className="text-xs">User Role: {userRole}</p>
+              <p className="text-xs">User ID: {userId}</p>
+              <p className="text-xs">Checkout Category: {category}</p>
+              <p className="text-xs">Order Total: ₹{totals.total.toFixed(2)}</p>
+              <p className="text-xs">Access Type: Customer order placement</p>
+            </div>
+          </div>
         </div>
 
         <a
           href={`/cart/${category}`}
-          className="flex items-center gap-2 text-sm hover:text-indigo-500 transition-colors mb-6"
+          className={`flex items-center gap-2 text-sm mb-6 transition-colors ${
+            darkMode ? "text-gray-300 hover:text-indigo-400" : "text-gray-600 hover:text-indigo-600"
+          }`}
         >
           <ArrowLeft size={16} />
           Back to Cart
         </a>
-        <h1 className="text-3xl font-bold text-center mb-8">Secure Checkout</h1>
+
+        <div className="text-center mb-8">
+          <div className="relative group mx-auto mb-4 inline-block">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md transform group-hover:scale-105 transition-all duration-300">
+              <Lock className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          <h1 className={`text-3xl font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>
+            Secure Checkout
+          </h1>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3">
-            <div className="p-6 rounded-lg shadow-md bg-white dark:bg-gray-800">
-              <h2 className="text-xl font-semibold mb-4 border-b pb-3 dark:border-gray-700">
+            <div className={`${
+              darkMode
+                ? "bg-gray-800/50 border-gray-700/50"
+                : "bg-white/50 border-gray-200/50"
+            } backdrop-blur-md rounded-lg border p-6 shadow-md transition-all duration-300`}>
+              <h2 className={`text-xl font-semibold mb-4 border-b pb-3 ${
+                darkMode ? "text-white border-gray-700" : "text-gray-900 border-gray-200"
+              }`}>
                 Order Summary
               </h2>
               <div className="space-y-4">
@@ -263,32 +373,49 @@ const CheckoutPage = () => {
                         className="w-12 h-12 object-cover rounded-md"
                       />
                       <div>
-                        <p className="font-medium">{item.productId.name}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className={`font-medium ${darkMode ? "text-white" : "text-gray-900"}`}>
+                          {item.productId.name}
+                        </p>
+                        <p className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
                           Qty: {item.quantity}
                         </p>
                       </div>
                     </div>
-                    <p className="font-medium">₹{(item.productId.price * item.quantity).toFixed(2)}</p>
+                    <p className={`font-medium ${darkMode ? "text-white" : "text-gray-900"}`}>
+                      ₹{(item.productId.price * item.quantity).toFixed(2)}
+                    </p>
                   </div>
                 ))}
               </div>
               
               {/* Vendor Information */}
               {cart.vendorId && (
-                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Vendor:</p>
-                  <p className="font-semibold text-indigo-600">{cart.vendorId.name}</p>
+                <div className={`mt-6 p-4 rounded-lg ${
+                  darkMode ? "bg-gray-700/30" : "bg-gray-50/50"
+                }`}>
+                  <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+                    Vendor:
+                  </p>
+                  <p className="font-semibold text-indigo-600">
+                    {cart.vendorId.name}
+                  </p>
                 </div>
               )}
             </div>
           </div>
+
           <div className="lg:col-span-2">
-            <div className="p-6 rounded-lg shadow-md sticky top-24 bg-white dark:bg-gray-800">
-              <h2 className="text-xl font-semibold mb-4 border-b pb-3 dark:border-gray-700">
+            <div className={`${
+              darkMode
+                ? "bg-gray-800/50 border-gray-700/50"
+                : "bg-white/50 border-gray-200/50"
+            } backdrop-blur-md rounded-lg border p-6 shadow-md sticky top-24 transition-all duration-300`}>
+              <h2 className={`text-xl font-semibold mb-4 border-b pb-3 ${
+                darkMode ? "text-white border-gray-700" : "text-gray-900 border-gray-200"
+              }`}>
                 Payment Details
               </h2>
-              <div className="space-y-2 text-sm">
+              <div className={`space-y-2 text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
                 <div className="flex justify-between">
                   <span>Subtotal</span>
                   <span>₹{totals.subtotal.toFixed(2)}</span>
@@ -301,7 +428,9 @@ const CheckoutPage = () => {
                   <span>Delivery Fee</span>
                   <span>₹{totals.delivery.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-3 mt-3 dark:border-gray-700">
+                <div className={`flex justify-between text-lg font-bold border-t pt-3 mt-3 ${
+                  darkMode ? "border-gray-700 text-white" : "border-gray-200 text-gray-900"
+                }`}>
                   <span>Total Payable</span>
                   <span>₹{totals.total.toFixed(2)}</span>
                 </div>
@@ -310,7 +439,7 @@ const CheckoutPage = () => {
               <button
                 onClick={handlePlaceOrder}
                 disabled={isPlacingOrder}
-                className="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:bg-gray-500 disabled:cursor-not-allowed"
+                className="w-full mt-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg hover:shadow-green-600/20 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {isPlacingOrder ? (
                   <>
@@ -323,14 +452,20 @@ const CheckoutPage = () => {
                 )}
               </button>
               
-              <p className="text-xs text-center mt-3 text-gray-500">
+              <p className={`text-xs text-center mt-3 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
                 🔒 Secure checkout • Pay on delivery
               </p>
               
               {/* Customer info display */}
-              <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded text-xs">
-                <p className="font-medium mb-1">Order placed by:</p>
-                <p className="text-gray-600 dark:text-gray-300">Role: {userRole}</p>
+              <div className={`mt-4 p-3 rounded text-xs ${
+                darkMode ? "bg-gray-700/30" : "bg-gray-50/50"
+              }`}>
+                <p className={`font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  Order placed by:
+                </p>
+                <p className={darkMode ? "text-gray-400" : "text-gray-600"}>
+                  Role: {userRole}
+                </p>
               </div>
             </div>
           </div>

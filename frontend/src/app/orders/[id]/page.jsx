@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from '../../../lib/axios'; // Corrected path for the custom axios instance
+import axios from '../../../lib/axios';
 import { Loader, AlertCircle, ArrowLeft, XCircle, ShoppingBag, ShieldX } from 'lucide-react';
+import { useTheme } from '../../context/ThemeProvider';
 
 const OrderDetailsPage = () => {
+  const { darkMode } = useTheme();
   const [orderId, setOrderId] = useState('');
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,11 +16,9 @@ const OrderDetailsPage = () => {
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
-  // Define unallowed roles - ONLY these specific vendor roles are blocked
   const UNALLOWED_ROLES = ['stationary-vendor', 'canteen-vendor'];
 
   useEffect(() => {
-    // Get order ID from the URL path
     const pathSegments = window.location.pathname.split('/');
     const idFromPath = pathSegments[pathSegments.length - 1];
     if (idFromPath) {
@@ -29,7 +29,6 @@ const OrderDetailsPage = () => {
   useEffect(() => {
     const checkAuthAndLoadOrder = async () => {
       try {
-        // Get user information from session
         const storedUser = sessionStorage.getItem("user");
         console.log("Raw stored user:", storedUser);
         console.log("SessionStorage keys:", Object.keys(sessionStorage));
@@ -52,7 +51,6 @@ const OrderDetailsPage = () => {
           return;
         }
 
-        // Check if user exists and has required fields
         if (!user || !user._id) {
           console.log("No user ID found in session storage, user data:", user);
           setError("Invalid user session. Please login again.");
@@ -62,7 +60,6 @@ const OrderDetailsPage = () => {
 
         console.log("User found with ID:", user._id, "and role:", user.role);
 
-        // Role-based access control - block ONLY vendor roles, allow all others
         if (user.role && UNALLOWED_ROLES.includes(user.role)) {
           console.log("User role blocked:", user.role);
           console.log("Blocked roles:", UNALLOWED_ROLES);
@@ -72,14 +69,12 @@ const OrderDetailsPage = () => {
           return;
         }
 
-        // Allow all other roles (customers, admins, etc.)
         console.log("User role allowed:", user.role || "no role specified");
 
         console.log("User authorized with role:", user.role || "customer/default");
         setUserId(user._id);
         setUserRole(user.role || "customer");
 
-        // Fetch order regardless of role (as long as not blocked vendor)
         if (orderId) {
           console.log("Proceeding to fetch order for authorized user with order ID:", orderId);
           await fetchOrder();
@@ -123,7 +118,7 @@ const OrderDetailsPage = () => {
     setIsCancelling(true);
     try {
       const response = await axios.patch(`/order/cancel/${orderId}`);
-      setOrder(response.data.order); // Update state with the cancelled order
+      setOrder(response.data.order);
     } catch (err) {
       alert(`Error: ${err.response?.data?.error || 'Could not cancel the order.'}`);
     } finally {
@@ -134,21 +129,20 @@ const OrderDetailsPage = () => {
   const totals = useMemo(() => {
     if (!order?.items) return { subtotal: 0, tax: 0, delivery: 0, total: 0 };
     const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = subtotal * 0.05; // 5% tax
-    const delivery = 15.00; // Flat delivery fee
+    const tax = subtotal * 0.05;
+    const delivery = 15.00;
     const total = subtotal + tax + delivery;
     return { subtotal, tax, delivery, total };
   }, [order]);
   
   const canBeCancelled = order && !['completed', 'shipped', 'delivered', 'cancelled'].includes(order.orderStatus);
 
-  // Loading state
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-white dark:bg-gray-900">
+      <div className={`flex justify-center items-center h-screen ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
         <div className="text-center">
           <Loader className="w-12 h-12 animate-spin text-indigo-500 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             {accessDenied ? "Checking permissions..." : "Loading order details..."}
           </p>
         </div>
@@ -156,30 +150,29 @@ const OrderDetailsPage = () => {
     );
   }
 
-  // Access denied state
   if (accessDenied) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center rounded-2xl shadow-lg p-8 max-w-md bg-white dark:bg-gray-800 text-gray-800 dark:text-white">
+      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+        <div className={`text-center rounded-2xl shadow-lg p-8 max-w-md ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
           <div className="mb-4">
             <ShieldX className="w-16 h-16 text-red-500 mx-auto" />
           </div>
           <h2 className="text-xl font-semibold mb-2">Order Details Access Denied</h2>
-          <p className="mb-2 text-gray-600 dark:text-gray-300">
+          <p className={`mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             This order details page is restricted from:
           </p>
-          <ul className="text-sm mb-6 text-gray-500 dark:text-gray-400">
+          <ul className={`text-sm mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             <li>• Canteen Vendors</li>
             <li>• Stationary Vendors</li>
           </ul>
-          <p className="text-xs mb-6 text-gray-500 dark:text-gray-400">
+          <p className={`text-xs mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             This is a customer-only page for viewing personal order details.
           </p>
           <div className="flex flex-col gap-3">
             <a href="/vendor-dashboard" className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
               Go to Vendor Dashboard
             </a>
-            <a href="/dashboard" className="px-6 py-2 rounded-lg transition-colors bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-400 dark:hover:bg-gray-600">
+            <a href="/dashboard" className={`px-6 py-2 rounded-lg transition-colors ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}>
               Back to Dashboard
             </a>
           </div>
@@ -188,12 +181,11 @@ const OrderDetailsPage = () => {
     );
   }
 
-  // Error state (for other errors)
   if (error && !accessDenied) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen text-center p-4 bg-white dark:bg-gray-900">
-        <AlertCircle className="w-16 h-16 mb-4 text-red-500 dark:text-red-400" />
-        <h2 className="text-2xl font-semibold mb-2 text-gray-800 dark:text-white">{error}</h2>
+      <div className={`flex flex-col justify-center items-center h-screen text-center p-4 ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
+        <AlertCircle className={`w-16 h-16 mb-4 ${darkMode ? 'text-red-400' : 'text-red-500'}`} />
+        <h2 className={`text-2xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>{error}</h2>
         {error.includes("login") ? (
           <div className="flex flex-col gap-3 mt-4">
             <a
@@ -204,7 +196,7 @@ const OrderDetailsPage = () => {
             </a>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
+              className={`px-6 py-2 rounded-lg transition-colors ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
             >
               Try Again
             </button>
@@ -216,7 +208,7 @@ const OrderDetailsPage = () => {
             </a>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
+              className={`px-6 py-2 rounded-lg transition-colors ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
             >
               Try Again
             </button>
@@ -226,13 +218,11 @@ const OrderDetailsPage = () => {
     );
   }
 
-  // Order not found state
   if (!order) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+      <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
         <div className="container mx-auto px-4 py-8">
-          {/* Debug Info (remove in production) */}
-          <div className="mb-6 p-4 rounded-lg border bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700 text-green-700 dark:text-green-200">
+          <div className={`mb-6 p-4 rounded-lg border ${darkMode ? 'bg-green-900 border-green-700 text-green-200' : 'bg-green-50 border-green-200 text-green-700'}`}>
             <h3 className="text-sm font-semibold mb-2">✅ Customer Order Details Access Granted:</h3>
             <p className="text-xs">User Role: {userRole || "customer/default"}</p>
             <p className="text-xs">User ID: {userId}</p>
@@ -245,7 +235,7 @@ const OrderDetailsPage = () => {
           <div className="flex flex-col justify-center items-center h-96 text-center p-4">
             <ShoppingBag className="w-16 h-16 mb-4 text-gray-400" />
             <h2 className="text-2xl font-semibold mb-2">Order not found.</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">The order you're looking for doesn't exist or has been removed.</p>
+            <p className={`mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>The order you're looking for doesn't exist or has been removed.</p>
             <a href="/orders" className="mt-4 px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors">
               Back to All Orders
             </a>
@@ -256,10 +246,9 @@ const OrderDetailsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
       <div className="container mx-auto px-4 py-8">
-        {/* Debug Info (remove in production) */}
-        <div className="mb-6 p-4 rounded-lg border bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700 text-green-700 dark:text-green-200">
+        <div className={`mb-6 p-4 rounded-lg border ${darkMode ? 'bg-green-900 border-green-700 text-green-200' : 'bg-green-50 border-green-200 text-green-700'}`}>
           <h3 className="text-sm font-semibold mb-2">✅ Customer Order Details Access Granted:</h3>
           <p className="text-xs">User Role: {userRole || "customer/default"}</p>
           <p className="text-xs">User ID: {userId}</p>
@@ -273,11 +262,11 @@ const OrderDetailsPage = () => {
           <ArrowLeft size={16} />
           Back to All Orders
         </a>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <div className="flex flex-col md:flex-row justify-between items-start mb-4 border-b pb-4 dark:border-gray-700">
+        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className={`flex flex-col md:flex-row justify-between items-start mb-4 border-b pb-4 ${darkMode ? 'border-gray-700' : ''}`}>
             <div>
               <h1 className="text-2xl font-bold">Order Details</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">ID: {order._id}</p>
+              <p className={`text-sm font-mono ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>ID: {order._id}</p>
             </div>
             <div className="text-left md:text-right mt-4 md:mt-0">
                 <p className="font-semibold">Status: <span className="font-normal">{order.orderStatus}</span></p>
@@ -288,10 +277,9 @@ const OrderDetailsPage = () => {
           <div className="space-y-4 mb-6">
             <h2 className="text-xl font-semibold mb-2">Items</h2>
             {order.items.map((item, index) => {
-              // ✅ FIX: Check if productId exists before trying to access its properties.
               const product = item.productId; 
               return (
-                <div key={index} className="flex justify-between items-center p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
+                <div key={index} className={`flex justify-between items-center p-2 rounded-md ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
                   <div className="flex items-center gap-4">
                     <img
                       src={product ? product.imgUrl : 'https://placehold.co/100x100/e2e8f0/e2e8f0?text=N/A'}
@@ -300,7 +288,7 @@ const OrderDetailsPage = () => {
                     />
                     <div>
                       <p className="font-medium">{product ? product.name : 'Product not available'}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                         Price: ₹{item.price.toFixed(2)}
                       </p>
                     </div>
@@ -320,13 +308,13 @@ const OrderDetailsPage = () => {
                 <p><strong>Name:</strong> {order.userId.name}</p>
                 <p><strong>Email:</strong> {order.userId.email}</p>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+            <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                 <h2 className="text-xl font-semibold mb-4">Order Total</h2>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span>Subtotal</span><span>₹{totals.subtotal.toFixed(2)}</span></div>
                   <div className="flex justify-between"><span>Taxes (5%)</span><span>₹{totals.tax.toFixed(2)}</span></div>
                   <div className="flex justify-between"><span>Delivery Fee</span><span>₹{totals.delivery.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-lg font-bold border-t pt-3 mt-3 dark:border-gray-600">
+                  <div className={`flex justify-between text-lg font-bold border-t pt-3 mt-3 ${darkMode ? 'border-gray-600' : ''}`}>
                     <span>Total</span>
                     <span>₹{totals.total.toFixed(2)}</span>
                   </div>
@@ -335,7 +323,7 @@ const OrderDetailsPage = () => {
           </div>
           
           {canBeCancelled && (
-            <div className="mt-6 border-t pt-6 dark:border-gray-700">
+            <div className={`mt-6 border-t pt-6 ${darkMode ? 'border-gray-700' : ''}`}>
               <button
                 onClick={handleCancelOrder}
                 disabled={isCancelling}
