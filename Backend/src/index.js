@@ -40,6 +40,9 @@ app.use(express.json());
 const authRouter = require("./router/authRouter");
 app.use("/auth", authRouter);
 
+const vendorCodeRouter = require("./router/vendorCode");
+app.use("/vendor-code", vendorCodeRouter);
+
 const userRouter = require("./router/userRoute");
 app.use("/user", userRouter);
 

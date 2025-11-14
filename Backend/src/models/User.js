@@ -44,15 +44,6 @@ const UserSchema = new mongoose.Schema(
         message: "{VALUE} is not valid role type",
       },
     },
-    // Add the missing fields that your frontend sends
-    studentId: {
-      type: String,
-      required: true,
-    },
-    department: {
-      type: String,
-      required: true,
-    },
   },
   { timestamps: true }
 );

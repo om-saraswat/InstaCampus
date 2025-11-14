@@ -12,6 +12,7 @@ import {
   UserCheck,
   Store,
   ShoppingBag,
+  Key,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeProvider";
 import api from "@/lib/axios";
@@ -24,17 +25,51 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     role: "",
-    studentId: "",
-    department: "",
+    vendorCode: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [codeVerified, setCodeVerified] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (error) setError("");
+    
+    // Reset code verification when vendor code changes
+    if (e.target.name === 'vendorCode') {
+      setCodeVerified(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!form.vendorCode || !form.role) {
+      setError("Please select a role and enter the vendor code");
+      return;
+    }
+
+    setIsVerifyingCode(true);
+    setError("");
+    
+    try {
+      const response = await api.post("/vendor-code/verify", {
+        code: form.vendorCode,
+        vendorType: form.role
+      });
+
+      if (response.data.success) {
+        setCodeVerified(true);
+        setSuccess("Code verified successfully!");
+        setTimeout(() => setSuccess(""), 3000);
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || "Invalid or expired vendor code");
+      setCodeVerified(false);
+    } finally {
+      setIsVerifyingCode(false);
+    }
   };
 
   const validateForm = () => {
@@ -54,6 +89,13 @@ export default function RegisterPage() {
       setError("Please select a role");
       return false;
     }
+    
+    // Check if vendor code is required and verified
+    if ((form.role === 'canteen-vendor' || form.role === 'stationary-vendor') && !codeVerified) {
+      setError("Please verify your vendor code before registering");
+      return false;
+    }
+
     return true;
   };
 
@@ -72,16 +114,17 @@ export default function RegisterPage() {
         email: form.email,
         password: form.password,
         role: form.role,
-        studentId: form.studentId,
-        department: form.department,
       };
+
+      // Add vendor code for vendors
+      if (form.role === 'canteen-vendor' || form.role === 'stationary-vendor') {
+        payload.vendorCode = form.vendorCode;
+      }
 
       const response = await api.post("/auth/signup", payload);
 
-      // Log response for debugging
       console.log("Full API response:", response.data);
 
-      // Handle different response structures
       let message;
       if (response.data.success) {
         message =
@@ -100,12 +143,11 @@ export default function RegisterPage() {
         password: "",
         confirmPassword: "",
         role: "",
-        studentId: "",
-        department: "",
+        vendorCode: "",
       });
       setAcceptedTerms(false);
+      setCodeVerified(false);
 
-      // Redirect to login page after successful registration
       setTimeout(() => {
         window.location.href = "/login";
       }, 2000);
@@ -126,13 +168,15 @@ export default function RegisterPage() {
     }
   };
 
-  const isFormValid =
-    form.name &&
-    form.email &&
-    form.password &&
-    form.confirmPassword &&
-    form.role &&
-    acceptedTerms;
+  const isFormValid = () => {
+    const baseValid = form.name && form.email && form.password && form.confirmPassword && form.role && acceptedTerms;
+    
+    if (form.role === 'canteen-vendor' || form.role === 'stationary-vendor') {
+      return baseValid && codeVerified;
+    }
+    
+    return baseValid;
+  };
 
   const roleOptions = [
     { value: "student", label: "Student", icon: GraduationCap },
@@ -140,51 +184,6 @@ export default function RegisterPage() {
     { value: "stationary-vendor", label: "Stationary Vendor", icon: ShoppingBag },
     { value: "admin", label: "Administrator", icon: User },
   ];
-
-  const departments = [
-    "Computer Science & Engineering",
-    "Information Technology", 
-    "Electronics & Communication",
-    "Mechanical Engineering",
-    "Civil Engineering",
-    "Business Administration",
-    "Master of Computer Applications",
-    "Canteen Services",
-    "Stationary Services",
-    "Administration",
-    "Other",
-  ];
-
-  // Helper function to get field label based on role
-  const getIdFieldLabel = () => {
-    switch (form.role) {
-      case "student":
-        return "Student ID";
-      case "canteen-vendor":
-        return "Vendor License ID";
-      case "stationary-vendor":
-        return "Vendor License ID";
-      case "admin":
-        return "Employee ID";
-      default:
-        return "ID";
-    }
-  };
-
-  const getIdFieldPlaceholder = () => {
-    switch (form.role) {
-      case "student":
-        return "Enter your student ID";
-      case "canteen-vendor":
-        return "Enter your canteen vendor license ID";
-      case "stationary-vendor":
-        return "Enter your stationary vendor license ID";
-      case "admin":
-        return "Enter your employee ID";
-      default:
-        return "Enter your ID";
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -357,63 +356,61 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* ID */}
-              {form.role && (
+              {/* Vendor Code (for vendors only) */}
+              {(form.role === 'canteen-vendor' || form.role === 'stationary-vendor') && (
                 <div className="space-y-1">
                   <label
                     className={`block text-sm font-medium ${
                       darkMode ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
-                    {getIdFieldLabel()}
+                    Vendor Registration Code
                   </label>
-                  <div className="relative group">
-                    <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      name="studentId"
-                      value={form.studentId}
-                      onChange={handleChange}
-                      className={`w-full pl-10 pr-3 py-2.5 rounded-lg border transition-all duration-200 ${
-                        darkMode
-                          ? "bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
-                          : "bg-white/50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
+                  <div className="flex gap-2">
+                    <div className="relative group flex-1">
+                      <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        name="vendorCode"
+                        value={form.vendorCode}
+                        onChange={handleChange}
+                        maxLength={6}
+                        className={`w-full pl-10 pr-3 py-2.5 rounded-lg border transition-all duration-200 ${
+                          codeVerified
+                            ? "border-green-500 bg-green-50/20"
+                            : darkMode
+                            ? "bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
+                            : "bg-white/50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
+                        }`}
+                        placeholder="Enter 6-digit code"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleVerifyCode}
+                      disabled={isVerifyingCode || codeVerified || !form.vendorCode}
+                      className={`px-4 py-2.5 rounded-lg font-medium transition-all duration-200 ${
+                        codeVerified
+                          ? "bg-green-500 text-white cursor-not-allowed"
+                          : "bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       }`}
-                      placeholder={getIdFieldPlaceholder()}
-                      required
-                    />
+                    >
+                      {isVerifyingCode ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : codeVerified ? (
+                        <CheckCircle className="w-5 h-5" />
+                      ) : (
+                        "Verify"
+                      )}
+                    </button>
                   </div>
-                </div>
-              )}
-
-              {/* Department */}
-              {form.role && (
-                <div className="space-y-1">
-                  <label
-                    className={`block text-sm font-medium ${
-                      darkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Department
-                  </label>
-                  <select
-                    name="department"
-                    value={form.department}
-                    onChange={handleChange}
-                    className={`w-full px-3 py-2.5 rounded-lg border transition-all duration-200 ${
-                      darkMode
-                        ? "bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
-                        : "bg-white/50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
-                    }`}
-                    required
-                  >
-                    <option value="">Select your department</option>
-                    {departments.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
+                  {codeVerified && (
+                    <p className="text-xs text-green-500 flex items-center gap-1 mt-1">
+                      <CheckCircle className="w-3 h-3" />
+                      Code verified successfully
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -506,7 +503,7 @@ export default function RegisterPage() {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={isLoading || !isFormValid}
+                disabled={isLoading || !isFormValid()}
                 className={`w-full py-2.5 px-5 rounded-lg font-medium text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 disabled:opacity-50 shadow-md hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-600/50`}
               >
                 {isLoading ? (
