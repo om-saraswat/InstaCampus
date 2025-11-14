@@ -290,7 +290,7 @@ const RecentOrderPage = () => {
     // Set up polling every 30 seconds (you can adjust this interval)
     const intervalId = setInterval(() => {
       fetchRecentOrders(false);
-    }, 30000); // 30 seconds
+    }, 60000); // 30 seconds
 
     // Cleanup
     return () => {
