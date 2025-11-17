@@ -3,34 +3,29 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "../../context/ThemeProvider";
-import api from "../../../lib/axios"; // your Axios instance
+import api from "../../../lib/axios";
 
 const ProductPage = () => {
   const { darkMode } = useTheme();
   
-  // Force component to re-render when localStorage changes
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
     setMounted(true);
   }, []);
   
-  // Listen for theme changes in localStorage
   useEffect(() => {
     const handleThemeChange = () => {
-      // Force re-render by updating a dummy state
       setMounted(prev => !prev);
     };
     
-    // Listen for storage events (theme changes from other tabs/components)
     window.addEventListener('storage', handleThemeChange);
     
-    // Also listen for manual localStorage changes in same tab
     const originalSetItem = localStorage.setItem;
     localStorage.setItem = function(key, value) {
       const result = originalSetItem.apply(this, arguments);
       if (key === 'theme') {
-        setTimeout(handleThemeChange, 0); // Async to avoid infinite loops
+        setTimeout(handleThemeChange, 0);
       }
       return result;
     };
@@ -41,7 +36,6 @@ const ProductPage = () => {
     };
   }, []);
   
-  // Get theme directly from localStorage as backup
   const [localStorageTheme, setLocalStorageTheme] = useState(false);
   
   useEffect(() => {
@@ -52,17 +46,23 @@ const ProductPage = () => {
     }
   }, [mounted]);
   
-  // Use localStorage theme if context theme seems wrong
   const effectiveDarkMode = darkMode ?? localStorageTheme;
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [vendorId, setVendorId] = useState(null);
   const [error, setError] = useState(null);
 
+  // ✅ Helper function to create image URL from base64
+  const getImageUrl = (product) => {
+    if (product.imageBase64 && product.imageContentType) {
+      return `data:${product.imageContentType};base64,${product.imageBase64}`;
+    }
+    return null;
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // Get user from sessionStorage
         const storedUser = sessionStorage.getItem("user");
         console.log("Raw stored user:", storedUser);
         
@@ -79,37 +79,27 @@ const ProductPage = () => {
         setVendorId(user._id);
         console.log("Fetching products for vendor ID:", user._id);
 
-        // Make API call
         const response = await api.get(`/product/vendor/${user._id}`);
         console.log("Full API response:", response);
         console.log("Response data:", response.data);
-        console.log("Response status:", response.status);
 
-        // Handle different possible response structures
         let productList = [];
         
         if (response.data) {
           if (Array.isArray(response.data)) {
-            // If response.data is directly an array
             productList = response.data;
           } else if (response.data.products) {
-            // If products are in response.data.products
             productList = response.data.products;
           } else if (response.data.data) {
-            // If products are in response.data.data
             productList = response.data.data;
           } else if (response.data.result) {
-            // If products are in response.data.result
             productList = response.data.result;
           }
         }
 
         console.log("Extracted product list:", productList);
-        console.log("Product list type:", typeof productList);
-        console.log("Is product list an array?", Array.isArray(productList));
         console.log("Product list length:", productList?.length);
 
-        // Ensure we have an array
         const finalProducts = Array.isArray(productList) ? productList : [];
         console.log("Final products to set:", finalProducts);
 
@@ -123,8 +113,6 @@ const ProductPage = () => {
         console.error("Error fetching products:", err);
         console.error("Error message:", err.message);
         console.error("Error response:", err.response);
-        console.error("Error response data:", err.response?.data);
-        console.error("Error response status:", err.response?.status);
         
         setError(`Failed to fetch products: ${err.message}`);
       } finally {
@@ -135,7 +123,6 @@ const ProductPage = () => {
     fetchProducts();
   }, []);
 
-  // Loading state
   if (loading) {
     return (
       <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center transition-colors`}>
@@ -147,7 +134,6 @@ const ProductPage = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center transition-colors`}>
@@ -161,7 +147,6 @@ const ProductPage = () => {
     );
   }
 
-  // No vendor ID state
   if (!vendorId) {
     return (
       <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center transition-colors`}>
@@ -198,8 +183,6 @@ const ProductPage = () => {
           <p className={`text-xs ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Products Count: {products.length}</p>
           <p className={`text-xs ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Products Type: {Array.isArray(products) ? 'Array' : typeof products}</p>
           <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Dark Mode: {effectiveDarkMode ? 'Enabled' : 'Disabled'}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Context Dark Mode: {darkMode ? 'Enabled' : 'Disabled'}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>LocalStorage Theme: {localStorageTheme ? 'Enabled' : 'Disabled'}</p>
         </div>
 
         {/* Products Grid */}
@@ -220,61 +203,73 @@ const ProductPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <Link
-                key={product._id}
-                href={`/dashboard/product/${product._id}`}
-                className={`${darkMode ? 'bg-gray-800 hover:shadow-gray-900/50' : 'bg-white hover:shadow-2xl'} rounded-2xl shadow-lg overflow-hidden transition-all duration-300 transform hover:-translate-y-1`}
-              >
-                {/* Product Image */}
-                <div className={`aspect-w-16 aspect-h-12 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
-                  {product.imgUrl ? (
-                    <img
-                      src={product.imgUrl}
-                      alt={product.name || 'Product'}
-                      className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        e.target.src = '/api/placeholder/300/200';
-                      }}
-                    />
-                  ) : (
-                    <div className={`w-full h-48 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} flex items-center justify-center transition-colors`}>
-                      <svg className={`w-12 h-12 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                {/* Product Info */}
-                <div className="p-4">
-                  <h2 className={`text-lg font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-800'} mb-2 line-clamp-2`}>
-                    {product.name || 'Unnamed Product'}
-                  </h2>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
-                    {product.category || 'Uncategorized'}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <p className={`text-lg font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                      ₹{product.price || '0.00'}
-                    </p>
-                    {product.stock !== undefined && (
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        product.stock > 0 
-                          ? darkMode 
-                            ? 'bg-green-900/30 text-green-400' 
-                            : 'bg-green-100 text-green-800'
-                          : darkMode 
-                            ? 'bg-red-900/30 text-red-400' 
-                            : 'bg-red-100 text-red-800'
-                      }`}>
-                        {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-                      </span>
+            {products.map((product) => {
+              const imageUrl = getImageUrl(product);
+              
+              return (
+                <Link
+                  key={product._id}
+                  href={`/dashboard/product/${product._id}`}
+                  className={`${darkMode ? 'bg-gray-800 hover:shadow-gray-900/50' : 'bg-white hover:shadow-2xl'} rounded-2xl shadow-lg overflow-hidden transition-all duration-300 transform hover:-translate-y-1`}
+                >
+                  {/* Product Image */}
+                  <div className={`aspect-w-16 aspect-h-12 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={product.name || 'Product'}
+                        className="w-full h-48 object-cover"
+                        onError={(e) => {
+                          console.error('Image load error for product:', product._id);
+                          e.target.style.display = 'none';
+                          e.target.parentElement.innerHTML = `
+                            <div class="w-full h-48 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} flex items-center justify-center">
+                              <svg class="w-12 h-12 ${darkMode ? 'text-gray-500' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          `;
+                        }}
+                      />
+                    ) : (
+                      <div className={`w-full h-48 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} flex items-center justify-center transition-colors`}>
+                        <svg className={`w-12 h-12 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
                     )}
                   </div>
-                </div>
-              </Link>
-            ))}
+
+                  {/* Product Info */}
+                  <div className="p-4">
+                    <h2 className={`text-lg font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-800'} mb-2 line-clamp-2`}>
+                      {product.name || 'Unnamed Product'}
+                    </h2>
+                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
+                      {product.category || 'Uncategorized'}
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <p className={`text-lg font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                        ₹{product.price || '0.00'}
+                      </p>
+                      {product.stock !== undefined && (
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          product.stock > 0 
+                            ? darkMode 
+                              ? 'bg-green-900/30 text-green-400' 
+                              : 'bg-green-100 text-green-800'
+                            : darkMode 
+                              ? 'bg-red-900/30 text-red-400' 
+                              : 'bg-red-100 text-red-800'
+                        }`}>
+                          {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

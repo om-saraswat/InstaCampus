@@ -3,35 +3,30 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "../../../context/ThemeProvider";
-import api from "@/lib/axios"; // adjust path to your Axios instance
+import api from "@/lib/axios";
 
 const AddProductPage = () => {
   const router = useRouter();
   const { darkMode } = useTheme();
   
-  // Force component to re-render when localStorage changes
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
     setMounted(true);
   }, []);
   
-  // Listen for theme changes in localStorage
   useEffect(() => {
     const handleThemeChange = () => {
-      // Force re-render by updating a dummy state
       setMounted(prev => !prev);
     };
     
-    // Listen for storage events (theme changes from other tabs/components)
     window.addEventListener('storage', handleThemeChange);
     
-    // Also listen for manual localStorage changes in same tab
     const originalSetItem = localStorage.setItem;
     localStorage.setItem = function(key, value) {
       const result = originalSetItem.apply(this, arguments);
       if (key === 'theme') {
-        setTimeout(handleThemeChange, 0); // Async to avoid infinite loops
+        setTimeout(handleThemeChange, 0);
       }
       return result;
     };
@@ -42,7 +37,6 @@ const AddProductPage = () => {
     };
   }, []);
   
-  // Get theme directly from localStorage as backup
   const [localStorageTheme, setLocalStorageTheme] = useState(false);
   
   useEffect(() => {
@@ -53,7 +47,6 @@ const AddProductPage = () => {
     }
   }, [mounted]);
   
-  // Use localStorage theme if context theme seems wrong
   const effectiveDarkMode = darkMode ?? localStorageTheme;
 
   const [formData, setFormData] = useState({
@@ -61,15 +54,79 @@ const AddProductPage = () => {
     category: "",
     description: "",
     price: "",
-    imgUrl: "",
     lowStockThreshold: "",
   });
 
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageFile = (file) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError("Please upload an image file");
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size should be less than 5MB");
+      return;
+    }
+
+    setError("");
+    setImageFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileInput = (e) => {
+    const file = e.target.files[0];
+    handleImageFile(file);
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    handleImageFile(file);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
   };
 
   const handleSubmit = async (e) => {
@@ -78,12 +135,29 @@ const AddProductPage = () => {
     setError("");
 
     try {
-      await api.post("/product", formData); // POST request to your backend
-      router.push("/dashboard/product"); // redirect to product list after success
+      // Create FormData to send multipart/form-data
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("lowStockThreshold", formData.lowStockThreshold);
+      
+      if (imageFile) {
+        formDataToSend.append("image", imageFile);
+      }
+
+      await api.post("/product", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      
+      router.push("/dashboard/product");
     } catch (err) {
       console.error(err);
       setError(
-        err.response?.data?.message || "Something went wrong. Please try again."
+        err.response?.data?.error || err.response?.data?.message || "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
@@ -92,7 +166,6 @@ const AddProductPage = () => {
 
   return (
     <div className={`min-h-screen ${effectiveDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-gray-50 to-gray-200'} flex flex-col items-center p-6 transition-colors`}>
-      {/* Back button */}
       <button
         onClick={() => router.back()}
         className={`self-start mb-6 ${effectiveDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} px-4 py-2 rounded-lg transition-colors shadow-sm`}
@@ -173,19 +246,6 @@ const AddProductPage = () => {
         />
 
         <input
-          type="url"
-          name="imgUrl"
-          placeholder="Image URL"
-          value={formData.imgUrl}
-          onChange={handleChange}
-          className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-            effectiveDarkMode 
-              ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400' 
-              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-          }`}
-        />
-
-        <input
           type="number"
           name="lowStockThreshold"
           placeholder="Low Stock Threshold"
@@ -199,6 +259,65 @@ const AddProductPage = () => {
           }`}
         />
 
+        {/* Image Upload Area */}
+        <div className="space-y-2">
+          <label className={`text-sm font-medium ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            Product Image
+          </label>
+          
+          {!imagePreview ? (
+            <div
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
+                isDragging
+                  ? effectiveDarkMode
+                    ? 'border-blue-400 bg-blue-900/20'
+                    : 'border-blue-500 bg-blue-50'
+                  : effectiveDarkMode
+                  ? 'border-gray-600 hover:border-gray-500 bg-gray-700/50'
+                  : 'border-gray-300 hover:border-gray-400 bg-gray-50'
+              }`}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileInput}
+                className="hidden"
+                id="imageInput"
+              />
+              <label htmlFor="imageInput" className="cursor-pointer">
+                <div className={`text-5xl mb-2 ${effectiveDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  📸
+                </div>
+                <p className={`text-sm mb-1 ${effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Drag & drop an image here, or click to select
+                </p>
+                <p className={`text-xs ${effectiveDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Maximum file size: 5MB
+                </p>
+              </label>
+            </div>
+          ) : (
+            <div className={`relative rounded-lg overflow-hidden border ${effectiveDarkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="w-full h-64 object-cover"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
+
         <button
           type="submit"
           disabled={loading}
@@ -210,11 +329,6 @@ const AddProductPage = () => {
         >
           {loading ? "Adding..." : "Add Product"}
         </button>
-
-        {/* Debug Info (remove in production) */}
-        <div className={`mt-4 p-3 rounded-lg text-xs ${effectiveDarkMode ? 'bg-yellow-900/20 border border-yellow-700 text-yellow-300' : 'bg-yellow-50 border border-yellow-200 text-yellow-700'}`}>
-          <p>Theme Debug: {effectiveDarkMode ? 'Dark Mode' : 'Light Mode'}</p>
-        </div>
       </form>
     </div>
   );

@@ -6,6 +6,12 @@ import axios from "@/lib/axios";
 
 import Sidebar from "@/app/components/Sidebar";
 
+// Utility function to convert base64 to data URL
+const getImageDataUrl = (imageBase64, imageContentType) => {
+  if (!imageBase64 || !imageContentType) return null;
+  return `data:${imageContentType};base64,${imageBase64}`;
+};
+
 export default function VendorProductsPage({ darkMode }) {
   const [products, setProducts] = useState([]);
   const [vendor, setVendor] = useState(null);
@@ -99,7 +105,18 @@ export default function VendorProductsPage({ darkMode }) {
       }
 
       const productsRes = await axios.get(`/product/vendor/${vendorId}`);
+      console.log("Products API response:", productsRes.data);
+      
       if (productsRes.data?.products) {
+        // Debug: Check if images exist in products
+        productsRes.data.products.forEach(product => {
+          console.log(`Product ${product.name}:`, {
+            hasImage: !!product.imageBase64,
+            imageSize: product.imageBase64?.length,
+            contentType: product.imageContentType
+          });
+        });
+        
         setProducts(productsRes.data.products);
       } else {
         setProducts([]);
@@ -128,6 +145,16 @@ export default function VendorProductsPage({ darkMode }) {
 
   const handleBackToVendors = () => {
     router.back();
+  };
+
+  // Get category emoji
+  const getCategoryEmoji = (category) => {
+    const emojis = {
+      'stationary': '📚',
+      'canteen': '🍔',
+      'electronics': '💻'
+    };
+    return emojis[category] || '📦';
   };
 
   // Loading state
@@ -281,14 +308,25 @@ export default function VendorProductsPage({ darkMode }) {
                     : "bg-white border-gray-200 hover:bg-gray-50"
                 }`}
               >
-                <img
-                  src={product.imgUrl || "/default-product.svg"}
-                  alt={product.name}
-                  className="w-full h-40 object-cover rounded"
-                  onError={(e) => {
-                    e.currentTarget.src = "/default-product.svg";
-                  }}
-                />
+                {/* Product Image - FIXED */}
+                <div className="relative w-full h-40 rounded overflow-hidden bg-gray-200 dark:bg-gray-700">
+                  {product.imageBase64 && product.imageContentType ? (
+                    <img
+                      src={getImageDataUrl(product.imageBase64, product.imageContentType)}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  
+                  {/* Fallback display */}
+                  <div className={`${product.imageBase64 ? 'hidden' : 'flex'} absolute inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500`}>
+                    <span className="text-4xl">{getCategoryEmoji(product.category)}</span>
+                  </div>
+                </div>
 
                 <h4
                   className={`mt-2 font-medium ${
@@ -297,7 +335,7 @@ export default function VendorProductsPage({ darkMode }) {
                 >
                   {product.name}
                 </h4>
-                <p className="text-sm text-gray-500">{product.category}</p>
+                <p className="text-sm text-gray-500 capitalize">{product.category}</p>
                 <p className="text-indigo-600 font-bold">₹{product.price}</p>
 
                 {product.description && (
