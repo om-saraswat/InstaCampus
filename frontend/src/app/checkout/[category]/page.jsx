@@ -311,24 +311,7 @@ const CheckoutPage = () => {
       </div>
 
       <div className="relative container mx-auto px-4 py-8">
-        {/* Debug Info */}
-        <div className={`mb-6 p-4 rounded-lg border-l-4 ${
-          darkMode
-            ? "bg-green-900/20 border-green-500 text-green-300"
-            : "bg-green-50/80 border-green-400 text-green-600"
-        }`}>
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="w-5 h-5 flex-shrink-0" />
-            <div>
-              <h3 className="text-sm font-semibold mb-1">✅ Customer Checkout Access Granted:</h3>
-              <p className="text-xs">User Role: {userRole}</p>
-              <p className="text-xs">User ID: {userId}</p>
-              <p className="text-xs">Checkout Category: {category}</p>
-              <p className="text-xs">Order Total: ₹{totals.total.toFixed(2)}</p>
-              <p className="text-xs">Access Type: Customer order placement</p>
-            </div>
-          </div>
-        </div>
+        
 
         <a
           href={`/cart/${category}`}

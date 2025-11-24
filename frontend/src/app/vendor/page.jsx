@@ -176,17 +176,7 @@ export default function VendorPage() {
         darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
-      {/* Debug Info (remove in production) */}
-      <div className={`w-full max-w-6xl mb-6 p-4 rounded-lg border transition-colors duration-200 ${
-        darkMode 
-          ? "bg-yellow-900 border-yellow-700 text-yellow-200" 
-          : "bg-yellow-50 border-yellow-200 text-yellow-700"
-      }`}>
-        <h3 className="text-sm font-semibold mb-2">Debug Info:</h3>
-        <p className="text-xs">Vendor ID: {vendorId}</p>
-        <p className="text-xs">User Role: {userRole}</p>
-        <p className="text-xs">Access Level: Authorized Vendor</p>
-      </div>
+  
 
       {/* Header Section */}
       <div className="text-center mb-12">

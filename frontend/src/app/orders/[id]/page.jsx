@@ -15,6 +15,8 @@ const OrderDetailsPage = () => {
   const [accessDenied, setAccessDenied] = useState(false);
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [isBlinking, setIsBlinking] = useState(false);
+  const [previousOrderStatus, setPreviousOrderStatus] = useState(null);
 
   const UNALLOWED_ROLES = ['stationary-vendor', 'canteen-vendor'];
 
@@ -94,6 +96,41 @@ const OrderDetailsPage = () => {
       checkAuthAndLoadOrder();
     }
   }, [orderId]);
+
+  // Auto-refresh order status every 1 minute
+  useEffect(() => {
+    if (!orderId || !order || accessDenied || error) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        console.log("Auto-refreshing order status...");
+        const response = await axios.get(`/order/${orderId}`);
+        const updatedOrder = response.data;
+        
+        // Check if order status or any items changed
+        const statusChanged = order.orderStatus !== updatedOrder.orderStatus;
+        const itemsChanged = JSON.stringify(order.items) !== JSON.stringify(updatedOrder.items);
+        const paymentChanged = order.paymentStatus !== updatedOrder.paymentStatus;
+        
+        if (statusChanged || itemsChanged || paymentChanged) {
+          console.log("Order update detected!");
+          setPreviousOrderStatus(order.orderStatus);
+          setOrder(updatedOrder);
+          
+          // Trigger blink effect for 10 seconds
+          setIsBlinking(true);
+          setTimeout(() => {
+            setIsBlinking(false);
+          }, 10000);
+        }
+      } catch (err) {
+        console.error("Error auto-refreshing order:", err);
+        // Silently fail - don't disrupt user experience
+      }
+    }, 60000); // 60000ms = 1 minute
+
+    return () => clearInterval(intervalId);
+  }, [orderId, order, accessDenied, error]);
 
   const fetchOrder = async () => {
     if (!orderId) return;
@@ -248,6 +285,18 @@ const OrderDetailsPage = () => {
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
       <div className="container mx-auto px-4 py-8">
+        {/* Change notification banner */}
+        {isBlinking && (
+          <div className={`mb-4 p-4 rounded-lg animate-pulse border-2 ${darkMode ? 'bg-yellow-900 border-yellow-600 text-yellow-200' : 'bg-yellow-100 border-yellow-400 text-yellow-800'}`}>
+            <p className="font-semibold text-center">🔔 Order Status Updated!</p>
+            {previousOrderStatus && (
+              <p className="text-sm text-center mt-1">
+                Status changed from <span className="font-bold">{previousOrderStatus}</span> to <span className="font-bold">{order.orderStatus}</span>
+              </p>
+            )}
+          </div>
+        )}
+
         <div className={`mb-6 p-4 rounded-lg border ${darkMode ? 'bg-green-900 border-green-700 text-green-200' : 'bg-green-50 border-green-200 text-green-700'}`}>
           <h3 className="text-sm font-semibold mb-2">✅ Customer Order Details Access Granted:</h3>
           <p className="text-xs">User Role: {userRole || "customer/default"}</p>
@@ -256,20 +305,21 @@ const OrderDetailsPage = () => {
           <p className="text-xs">Order Found: Yes</p>
           <p className="text-xs">Access Type: Authorized user order details viewing</p>
           <p className="text-xs">Blocked Roles: {UNALLOWED_ROLES.join(', ')}</p>
+          <p className="text-xs mt-2">🔄 Auto-refreshing every 60 seconds</p>
         </div>
 
         <a href="/orders" className="flex items-center gap-2 text-sm hover:text-indigo-500 transition-colors mb-6">
           <ArrowLeft size={16} />
           Back to All Orders
         </a>
-        <div className={`rounded-lg shadow-md p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className={`rounded-lg shadow-md p-6 transition-all duration-300 ${isBlinking ? 'ring-4 ring-yellow-400' : ''} ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className={`flex flex-col md:flex-row justify-between items-start mb-4 border-b pb-4 ${darkMode ? 'border-gray-700' : ''}`}>
             <div>
               <h1 className="text-2xl font-bold">Order Details</h1>
               <p className={`text-sm font-mono ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>ID: {order._id}</p>
             </div>
             <div className="text-left md:text-right mt-4 md:mt-0">
-                <p className="font-semibold">Status: <span className="font-normal">{order.orderStatus}</span></p>
+                <p className="font-semibold">Status: <span className={`font-normal ${isBlinking ? 'animate-pulse text-yellow-500 font-bold' : ''}`}>{order.orderStatus}</span></p>
                 <p className="font-semibold">Date: <span className="font-normal">{new Date(order.createdAt).toLocaleDateString()}</span></p>
             </div>
           </div>

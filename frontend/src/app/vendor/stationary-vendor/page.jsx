@@ -246,17 +246,6 @@ export default function VendorPage() {
     <main className={`min-h-screen p-6 transition-colors duration-200 ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
       {/* Header Section */}
       <div className="max-w-7xl mx-auto">
-        {/* Debug Info (remove in production) */}
-        <div className={`mb-6 p-4 rounded-lg border transition-colors duration-200 ${
-          darkMode 
-            ? "bg-green-900 border-green-700 text-green-200" 
-            : "bg-green-50 border-green-200 text-green-700"
-        }`}>
-          <h3 className="text-sm font-semibold mb-2">✅ Access Granted:</h3>
-          <p className="text-xs">User Role: {userRole}</p>
-          <p className="text-xs">Vendor ID: {vendorId}</p>
-          <p className="text-xs">Viewing: {role} category</p>
-        </div>
 
         <div className="mb-8">
           <button

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import axios from '../../lib/axios';
 import { Loader, AlertCircle, ArrowRight, ShoppingBag, ShieldX, CheckCircle, Package } from 'lucide-react';
 import { useTheme } from '../context/ThemeProvider';
@@ -171,13 +172,13 @@ const AllOrdersPage = () => {
               This is a customer-only page for viewing personal order history.
             </p>
             <div className="flex flex-col gap-3">
-              <a 
+              <Link 
                 href="/vendor-dashboard" 
                 className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-6 py-2.5 rounded-lg font-medium shadow-md hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 transform hover:scale-105"
               >
                 Go to Vendor Dashboard
-              </a>
-              <a 
+              </Link>
+              <Link 
                 href="/dashboard" 
                 className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-300 ${
                   darkMode
@@ -186,7 +187,7 @@ const AllOrdersPage = () => {
                 }`}
               >
                 Back to Dashboard
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -218,12 +219,12 @@ const AllOrdersPage = () => {
           </h2>
           {error.includes("login") ? (
             <div className="flex flex-col gap-3 mt-4">
-              <a
+              <Link
                 href="/login"
                 className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
               >
                 Go to Login
-              </a>
+              </Link>
               <button
                 onClick={() => window.location.reload()}
                 className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
@@ -265,43 +266,6 @@ const AllOrdersPage = () => {
           <div className="absolute bottom-[-10%] right-[10%] w-64 h-64 sm:w-80 sm:h-80 bg-purple-500/10 rounded-full blur-2xl animate-pulse" />
         </div>
 
-        <div className="relative container mx-auto px-4 py-8">
-          {/* Debug Info */}
-          <div className={`mb-6 p-4 rounded-lg border-l-4 ${
-            darkMode
-              ? "bg-green-900/20 border-green-500 text-green-300"
-              : "bg-green-50/80 border-green-400 text-green-600"
-          }`}>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-5 h-5 flex-shrink-0" />
-              <div>
-                <h3 className="text-sm font-semibold mb-1">✅ Customer Order History Access Granted:</h3>
-                <p className="text-xs">User Role: {userRole}</p>
-                <p className="text-xs">User ID: {userId}</p>
-                <p className="text-xs">Orders Found: 0</p>
-                <p className="text-xs">Access Type: Customer order history viewing</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col justify-center items-center h-96 text-center p-4">
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md mb-4">
-              <ShoppingBag className="w-10 h-10 text-white" />
-            </div>
-            <h2 className={`text-2xl font-semibold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-              You have no orders yet.
-            </h2>
-            <p className={`mb-6 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-              Looks like you haven't made a purchase.
-            </p>
-            <a 
-              href="/vendor" 
-              className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 transform hover:scale-105"
-            >
-              Start Shopping
-            </a>
-          </div>
-        </div>
       </div>
     );
   }
@@ -322,23 +286,8 @@ const AllOrdersPage = () => {
       </div>
 
       <div className="relative container mx-auto px-4 py-8">
-        {/* Debug Info */}
-        <div className={`mb-6 p-4 rounded-lg border-l-4 ${
-          darkMode
-            ? "bg-green-900/20 border-green-500 text-green-300"
-            : "bg-green-50/80 border-green-400 text-green-600"
-        }`}>
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="w-5 h-5 flex-shrink-0" />
-            <div>
-              <h3 className="text-sm font-semibold mb-1">✅ Customer Order History Access Granted:</h3>
-              <p className="text-xs">User Role: {userRole}</p>
-              <p className="text-xs">User ID: {userId}</p>
-              <p className="text-xs">Orders Found: {orders.length}</p>
-              <p className="text-xs">Access Type: Customer order history viewing</p>
-            </div>
-          </div>
-        </div>
+
+        
 
         {/* Page Title */}
         <div className="text-center mb-8">
@@ -347,9 +296,16 @@ const AllOrdersPage = () => {
               <Package className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h1 className={`text-3xl font-bold ${darkMode ? "text-white" : "text-gray-900"}`}>
+          <h1 className={`text-3xl font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
             My Orders
           </h1>
+          <Link 
+            href="/vendor" 
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:shadow-purple-600/20 transition-all duration-300 transform hover:scale-105"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            Browse Vendors
+          </Link>
         </div>
 
         {/* Orders List */}
@@ -357,7 +313,7 @@ const AllOrdersPage = () => {
           {orders.map(order => {
             const total = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 1.05 + 15;
             return (
-              <a 
+              <Link 
                 key={order._id} 
                 href={`/orders/${order._id}`}
                 className={`block rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-300 border ${
@@ -411,7 +367,7 @@ const AllOrdersPage = () => {
                     <ArrowRight size={20} />
                   </div>
                 </div>
-              </a>
+              </Link>
             );
           })}
         </div>

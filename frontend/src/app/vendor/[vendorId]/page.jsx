@@ -257,19 +257,6 @@ export default function VendorProductsPage({ darkMode }) {
     <div className="relative flex">
       {/* Main Content */}
       <main className="flex-1 p-4">
-        {/* Debug Info (remove in production) */}
-        <div className={`mb-6 p-4 rounded-lg border ${
-          darkMode 
-            ? "bg-green-900 border-green-700 text-green-200" 
-            : "bg-green-50 border-green-200 text-green-700"
-        }`}>
-          <h3 className="text-sm font-semibold mb-2">✅ Customer Shopping Access Granted:</h3>
-          <p className="text-xs">User Role: {userRole}</p>
-          <p className="text-xs">User ID: {userId}</p>
-          <p className="text-xs">Vendor ID: {vendorId}</p>
-          <p className="text-xs">Products Found: {products.length}</p>
-          <p className="text-xs">Access Type: Customer shopping for products</p>
-        </div>
 
         {/* Page Content */}
         <div className="mb-6 mt-4">
