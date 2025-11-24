@@ -334,15 +334,7 @@ const OrderEditPage = () => {
           </div>
         </div>
 
-        {/* Debug Info */}
-        <div className={`${effectiveDarkMode ? 'bg-yellow-900/20 border-yellow-700' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-4 mb-6`}>
-          <h3 className={`text-sm font-semibold ${effectiveDarkMode ? 'text-yellow-200' : 'text-yellow-800'} mb-2`}>Debug Info:</h3>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Order ID: {orderid}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Vendor ID: {vendorId}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Order Status: {order.orderStatus}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Items Count: {order.items?.length || 0}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Dark Mode: {effectiveDarkMode ? 'Enabled' : 'Disabled'}</p>
-        </div>
+        
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Order Information */}

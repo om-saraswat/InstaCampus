@@ -253,19 +253,7 @@ const CartPage = () => {
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} p-4 sm:p-6 lg:p-8`}>
       <div className="max-w-4xl mx-auto">
-        {/* Debug Info (remove in production) */}
-        <div className={`mb-6 p-4 rounded-lg border ${
-          darkMode 
-            ? "bg-green-900 border-green-700 text-green-200" 
-            : "bg-green-50 border-green-200 text-green-700"
-        }`}>
-          <h3 className="text-sm font-semibold mb-2">✅ Customer Cart Access Granted:</h3>
-          <p className="text-xs">User Role: {userRole}</p>
-          <p className="text-xs">User ID: {userId}</p>
-          <p className="text-xs">Cart Category: {categoryName}</p>
-          <p className="text-xs">Items in Cart: {cart?.items?.length || 0}</p>
-          <p className="text-xs">Access Type: Customer cart management</p>
-        </div>
+        
 
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()} className="flex items-center gap-2 hover:text-indigo-500 transition-colors">

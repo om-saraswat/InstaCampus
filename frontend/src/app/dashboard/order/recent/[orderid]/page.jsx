@@ -159,7 +159,7 @@ const VendorOrderDetailPage = () => {
         return effectiveDarkMode 
           ? 'bg-purple-900/30 text-purple-400 border-purple-600' 
           : 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'completed':
+      case 'delivered':
         return effectiveDarkMode 
           ? 'bg-green-900/30 text-green-400 border-green-600' 
           : 'bg-green-100 text-green-800 border-green-200';
@@ -192,38 +192,50 @@ const VendorOrderDetailPage = () => {
   };
 
   const handleStatusUpdate = async () => {
-    if (!order || updating) return;
+  if (!order || updating) return;
+  setUpdating(true);
 
-    setUpdating(true);
-    try {
-      await api.patch(`/vendor/order/${status}/${orderid}`);
-      
-      // Update local state
-      setOrder(prev => ({ ...prev, orderStatus: status }));
-      
-      // Show success message
-      const successMessage = document.createElement('div');
-      successMessage.className = `fixed top-4 right-4 ${effectiveDarkMode ? 'bg-green-600' : 'bg-green-500'} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
-      successMessage.textContent = 'Order status updated successfully!';
-      document.body.appendChild(successMessage);
-      
-      setTimeout(() => {
-        document.body.removeChild(successMessage);
-      }, 3000);
-      
-    } catch (err) {
-      console.error(err);
-      if (err.response?.status === 401) {
-        setError("Session expired. Please login again.");
-      } else if (err.response?.status === 403) {
-        setError("Access forbidden. You don't have permission to update this order.");
-      } else {
-        setError(err.response?.data?.error || "Failed to update order status.");
-      }
-    } finally {
-      setUpdating(false);
+  // Normalize & encode — prevents enum/whitespace/casing issues
+  const safeStatus = String(status || '').trim().toLowerCase();
+  const safeOrderId = encodeURIComponent(String(orderid || ''));
+
+  try {
+    const res = await api.patch(
+      `/vendor/order/${encodeURIComponent(safeStatus)}/${safeOrderId}`
+    );
+
+    // Use server response if available (safer), otherwise fallback to our normalized value
+    const newStatus = res?.data?.order?.orderStatus ?? safeStatus;
+    setOrder(prev => ({ ...prev, orderStatus: newStatus }));
+
+    // success message (keeps your original DOM approach)
+    const successMessage = document.createElement('div');
+    successMessage.className = `fixed top-4 right-4 ${effectiveDarkMode ? 'bg-green-600' : 'bg-green-500'} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+    successMessage.textContent = 'Order status updated successfully!';
+    document.body.appendChild(successMessage);
+    setTimeout(() => document.body.removeChild(successMessage), 3000);
+
+  } catch (err) {
+    // Log server response body so you can see exact validation error
+    console.error("Order update error:", err);
+    if (err?.response) {
+      console.error("Server status:", err.response.status);
+      console.error("Server response data:", err.response.data);
     }
-  };
+
+    if (err.response?.status === 401) {
+      setError("Session expired. Please login again.");
+    } else if (err.response?.status === 403) {
+      setError("Access forbidden. You don't have permission to update this order.");
+    } else {
+      // Prefer backend message if present
+      setError(err.response?.data?.error || "Failed to update order status.");
+    }
+  } finally {
+    setUpdating(false);
+  }
+};
+
 
   // Loading state
   if (loading) {
@@ -361,15 +373,6 @@ const VendorOrderDetailPage = () => {
           </div>
         </div>
 
-        {/* Debug Info */}
-        <div className={`${effectiveDarkMode ? 'bg-yellow-900/20 border-yellow-700' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-4 mb-6`}>
-          <h3 className={`text-sm font-semibold ${effectiveDarkMode ? 'text-yellow-200' : 'text-yellow-800'} mb-2`}>Debug Info:</h3>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Order ID: {orderid}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Vendor ID: {vendorId}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Current Status: {order.orderStatus}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Vendor Items: {vendorItems.length}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Dark Mode: {effectiveDarkMode ? 'Enabled' : 'Disabled'}</p>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Order Information */}
@@ -482,7 +485,7 @@ const VendorOrderDetailPage = () => {
                     <option value="confirmed">Confirmed</option>
                     <option value="preparing">Preparing</option>
                     <option value="ready">Ready</option>
-                    <option value="completed">Completed</option>
+                    {/* <option value="delivered">Delivered</option> */}
                     <option value="cancelled">Cancelled</option>
                   </select>
                 </div>

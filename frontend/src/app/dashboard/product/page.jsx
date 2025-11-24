@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -114,7 +115,13 @@ const ProductPage = () => {
         console.error("Error message:", err.message);
         console.error("Error response:", err.response);
         
-        setError(`Failed to fetch products: ${err.message}`);
+        // Only set error if it's not a user authentication issue
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setError("Please login to view your products.");
+        } else {
+          // For other errors, we still have vendorId, so just show empty state
+          setProducts([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -147,25 +154,22 @@ const ProductPage = () => {
     );
   }
 
-  if (!vendorId) {
-    return (
-      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} flex items-center justify-center transition-colors`}>
-        <div className={`text-center ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-lg p-8`}>
-          <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>Please login to view your products.</p>
-          <Link href="/login" className={`${darkMode ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white px-6 py-2 rounded-lg transition-colors`}>
-            Go to Login
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} flex flex-col items-center p-6 transition-colors`}>
       <div className="w-full max-w-6xl">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className={`text-3xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>My Products</h1>
+          <div className="flex items-center gap-4">
+            <Link href="http://localhost:3000/dashboard">
+              <button className={`${darkMode ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-white hover:bg-gray-50 text-gray-700'} px-4 py-2 rounded-xl shadow-lg transition-colors flex items-center gap-2 border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back
+              </button>
+            </Link>
+            <h1 className={`text-3xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>My Products</h1>
+          </div>
           <Link href="/dashboard/product/add-product">
             <button className={`${darkMode ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white px-6 py-3 rounded-2xl shadow-lg transition-colors flex items-center gap-2`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,15 +178,6 @@ const ProductPage = () => {
               Add Product
             </button>
           </Link>
-        </div>
-
-        {/* Debug Info (remove in production) */}
-        <div className={`${darkMode ? 'bg-yellow-900/20 border-yellow-700' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-4 mb-6`}>
-          <h3 className={`text-sm font-semibold ${darkMode ? 'text-yellow-200' : 'text-yellow-800'} mb-2`}>Debug Info:</h3>
-          <p className={`text-xs ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Vendor ID: {vendorId}</p>
-          <p className={`text-xs ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Products Count: {products.length}</p>
-          <p className={`text-xs ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Products Type: {Array.isArray(products) ? 'Array' : typeof products}</p>
-          <p className={`text-xs ${effectiveDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>Dark Mode: {effectiveDarkMode ? 'Enabled' : 'Disabled'}</p>
         </div>
 
         {/* Products Grid */}

@@ -524,57 +524,7 @@ const InventoryUpdatePage = () => {
           </Link>
         </div>
 
-        {/* Debug Info (remove in production) */}
-        <div
-          className={`${
-            effectiveDarkMode
-              ? "bg-yellow-900/20 border-yellow-700"
-              : "bg-yellow-50 border-yellow-200"
-          } border rounded-lg p-4 mb-6`}
-        >
-          <h3
-            className={`text-sm font-semibold ${
-              effectiveDarkMode ? "text-yellow-200" : "text-yellow-800"
-            } mb-2`}
-          >
-            Debug Info:
-          </h3>
-          <p
-            className={`text-xs ${
-              effectiveDarkMode ? "text-yellow-300" : "text-yellow-700"
-            }`}
-          >
-            Vendor ID: {vendorId}
-          </p>
-          <p
-            className={`text-xs ${
-              effectiveDarkMode ? "text-yellow-300" : "text-yellow-700"
-            }`}
-          >
-            Inventory Item ID: {params.id}
-          </p>
-          <p
-            className={`text-xs ${
-              effectiveDarkMode ? "text-yellow-300" : "text-yellow-700"
-            }`}
-          >
-            Current Stock: {quantity}
-          </p>
-          <p
-            className={`text-xs ${
-              effectiveDarkMode ? "text-yellow-300" : "text-yellow-700"
-            }`}
-          >
-            Product Name: {product?.name}
-          </p>
-          <p
-            className={`text-xs ${
-              effectiveDarkMode ? "text-yellow-300" : "text-yellow-700"
-            }`}
-          >
-            Dark Mode: {effectiveDarkMode ? "Enabled" : "Disabled"}
-          </p>
-        </div>
+      
 
         {/* Message Display */}
         {message && (
