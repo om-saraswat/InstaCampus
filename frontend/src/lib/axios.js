@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL, 
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
   timeout: 30000,
   headers: {
@@ -34,12 +34,12 @@ api.interceptors.response.use(
         window.location.href = "/login";
       }
       if (error.response.status === 403) {
-        console.error("❌ Forbidden");
+        console.error("  Forbidden");
       }
     } else if (error.request) {
-      console.error("❌ No response from backend. Check server.");
+      console.error("  No response from backend. Check server.");
     } else {
-      console.error("❌ Axios error:", error.message);
+      console.error("  Axios error:", error.message);
     }
     return Promise.reject(error);
   }

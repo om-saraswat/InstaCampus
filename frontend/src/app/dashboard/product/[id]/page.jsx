@@ -25,7 +25,7 @@ export default function EditProductPage() {
     lowStockThreshold: 0,
   });
 
-  // ✅ Helper function to create image URL from base64
+  //  Helper function to create image URL from base64
   const getImageUrl = (product) => {
     if (product?.imageBase64 && product?.imageContentType) {
       return `data:${product.imageContentType};base64,${product.imageBase64}`;
@@ -39,7 +39,7 @@ export default function EditProductPage() {
       try {
         const res = await axios.get(`/product/${productId}`);
         console.log("Product fetched:", res.data);
-        
+
         if (res.data.product) {
           const productData = res.data.product;
           setProduct(productData);
@@ -50,7 +50,7 @@ export default function EditProductPage() {
             price: productData.price || 0,
             lowStockThreshold: productData.lowStockThreshold || 0,
           });
-          
+
           // Set initial image preview if product has an image
           const imageUrl = getImageUrl(productData);
           if (imageUrl) {
@@ -83,7 +83,7 @@ export default function EditProductPage() {
         alert('Please select an image file');
         return;
       }
-      
+
       // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         alert('Image size must be less than 5MB');
@@ -91,7 +91,7 @@ export default function EditProductPage() {
       }
 
       setImageFile(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -120,7 +120,7 @@ export default function EditProductPage() {
       formData.append('description', form.description);
       formData.append('price', form.price);
       formData.append('lowStockThreshold', form.lowStockThreshold);
-      
+
       // Add image if a new one was selected
       if (imageFile) {
         formData.append('image', imageFile);
@@ -131,7 +131,7 @@ export default function EditProductPage() {
           'Content-Type': 'multipart/form-data',
         },
       });
-      
+
       console.log("Update response:", res.data);
       alert(res.data.message || "Product updated successfully");
       router.push("/dashboard/product");
@@ -162,13 +162,11 @@ export default function EditProductPage() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
-        darkMode ? 'bg-gray-900' : 'bg-gray-100'
-      }`}>
+      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-gray-100'
+        }`}>
         <div className="text-center">
-          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
-            darkMode ? 'border-blue-400' : 'border-blue-600'
-          } mx-auto mb-4`}></div>
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${darkMode ? 'border-blue-400' : 'border-blue-600'
+            } mx-auto mb-4`}></div>
           <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
             Loading product...
           </p>
@@ -180,24 +178,21 @@ export default function EditProductPage() {
   return (
     <div className={`min-h-screen p-6 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
       <div className="max-w-3xl mx-auto">
-        <h1 className={`text-3xl font-bold mb-6 ${
-          darkMode ? "text-white" : "text-gray-900"
-        }`}>
+        <h1 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-gray-900"
+          }`}>
           Edit Product
         </h1>
 
         {product && (
-          <form onSubmit={handleSubmit} className={`rounded-2xl shadow-lg p-6 space-y-6 ${
-            darkMode ? 'bg-gray-800' : 'bg-white'
-          }`}>
+          <form onSubmit={handleSubmit} className={`rounded-2xl shadow-lg p-6 space-y-6 ${darkMode ? 'bg-gray-800' : 'bg-white'
+            }`}>
             {/* Image Upload Section */}
             <div>
-              <label className={`block mb-2 font-medium ${
-                darkMode ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <label className={`block mb-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                 Product Image
               </label>
-              
+
               {/* Image Preview */}
               {imagePreview && (
                 <div className="mb-4 relative">
@@ -219,17 +214,16 @@ export default function EditProductPage() {
                   )}
                 </div>
               )}
-              
+
               {/* File Input */}
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className={`w-full px-3 py-2 border rounded-lg ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                className={`w-full px-3 py-2 border rounded-lg ${darkMode
+                    ? 'bg-gray-700 border-gray-600 text-gray-200'
                     : 'bg-white border-gray-300 text-gray-900'
-                }`}
+                  }`}
               />
               <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 Select a new image to replace the current one (max 5MB)
@@ -238,9 +232,8 @@ export default function EditProductPage() {
 
             {/* Name */}
             <div>
-              <label className={`block mb-2 font-medium ${
-                darkMode ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <label className={`block mb-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                 Name *
               </label>
               <input
@@ -248,31 +241,28 @@ export default function EditProductPage() {
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                className={`w-full px-4 py-2 border rounded-lg ${darkMode
+                    ? 'bg-gray-700 border-gray-600 text-gray-200'
                     : 'bg-white border-gray-300 text-gray-900'
-                }`}
+                  }`}
                 required
               />
             </div>
 
             {/* Category */}
             <div>
-              <label className={`block mb-2 font-medium ${
-                darkMode ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <label className={`block mb-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                 Category *
               </label>
               <select
                 name="category"
                 value={form.category}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                className={`w-full px-4 py-2 border rounded-lg ${darkMode
+                    ? 'bg-gray-700 border-gray-600 text-gray-200'
                     : 'bg-white border-gray-300 text-gray-900'
-                }`}
+                  }`}
                 required
               >
                 <option value="">Select Category</option>
@@ -283,20 +273,18 @@ export default function EditProductPage() {
 
             {/* Description */}
             <div>
-              <label className={`block mb-2 font-medium ${
-                darkMode ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <label className={`block mb-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                 Description *
               </label>
               <textarea
                 name="description"
                 value={form.description}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                className={`w-full px-4 py-2 border rounded-lg ${darkMode
+                    ? 'bg-gray-700 border-gray-600 text-gray-200'
                     : 'bg-white border-gray-300 text-gray-900'
-                }`}
+                  }`}
                 rows={4}
                 required
               />
@@ -304,9 +292,8 @@ export default function EditProductPage() {
 
             {/* Price */}
             <div>
-              <label className={`block mb-2 font-medium ${
-                darkMode ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <label className={`block mb-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                 Price (₹) *
               </label>
               <input
@@ -314,11 +301,10 @@ export default function EditProductPage() {
                 name="price"
                 value={form.price}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                className={`w-full px-4 py-2 border rounded-lg ${darkMode
+                    ? 'bg-gray-700 border-gray-600 text-gray-200'
                     : 'bg-white border-gray-300 text-gray-900'
-                }`}
+                  }`}
                 min={0}
                 step="0.01"
                 required
@@ -327,9 +313,8 @@ export default function EditProductPage() {
 
             {/* Low Stock Threshold */}
             <div>
-              <label className={`block mb-2 font-medium ${
-                darkMode ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <label className={`block mb-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
                 Low Stock Threshold
               </label>
               <input
@@ -337,11 +322,10 @@ export default function EditProductPage() {
                 name="lowStockThreshold"
                 value={form.lowStockThreshold}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                className={`w-full px-4 py-2 border rounded-lg ${darkMode
+                    ? 'bg-gray-700 border-gray-600 text-gray-200'
                     : 'bg-white border-gray-300 text-gray-900'
-                }`}
+                  }`}
                 min={0}
               />
             </div>
@@ -351,13 +335,12 @@ export default function EditProductPage() {
               <button
                 type="submit"
                 disabled={updating}
-                className={`flex-1 px-6 py-3 rounded-lg text-white font-medium transition-colors ${
-                  updating 
-                    ? 'bg-gray-400 cursor-not-allowed' 
+                className={`flex-1 px-6 py-3 rounded-lg text-white font-medium transition-colors ${updating
+                    ? 'bg-gray-400 cursor-not-allowed'
                     : darkMode
                       ? 'bg-blue-500 hover:bg-blue-600'
                       : 'bg-blue-600 hover:bg-blue-700'
-                }`}
+                  }`}
               >
                 {updating ? "Updating..." : "Update Product"}
               </button>
@@ -366,11 +349,10 @@ export default function EditProductPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                className={`flex-1 px-6 py-3 rounded-lg text-white font-medium transition-colors ${
-                  deleting 
-                    ? 'bg-gray-400 cursor-not-allowed' 
+                className={`flex-1 px-6 py-3 rounded-lg text-white font-medium transition-colors ${deleting
+                    ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-red-600 hover:bg-red-700'
-                }`}
+                  }`}
               >
                 {deleting ? "Deleting..." : "Delete Product"}
               </button>
@@ -380,11 +362,10 @@ export default function EditProductPage() {
             <button
               type="button"
               onClick={() => router.push("/dashboard/product")}
-              className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
-                darkMode
+              className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${darkMode
                   ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+                }`}
             >
               Cancel
             </button>

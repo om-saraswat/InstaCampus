@@ -151,7 +151,7 @@ The **frontend** is built to provide a seamless experience for both students and
 
 ---
 
-## ✅ Summary
+##  Summary
 Instacampus connects **students, vendors, and campus services** into a single digital ecosystem.  
 From **canteen ordering** to **stationary & printing requests**, everything is unified for speed, efficiency, and convenience.  
 

@@ -12,14 +12,14 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-    
+
     const allowedOrigins = [
       'http://localhost:3000',
-      'http://localhost:3001', 
+      'http://localhost:3001',
       'https://insta-campus-lac.vercel.app/',
       'https://insta-campus-blush.vercel.app' // Replace with your actual frontend URL // Add all your frontend URLs
     ];
-    
+
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -27,7 +27,7 @@ const corsOptions = {
     }
   },
   credentials: true, // This is CRITICAL - allows cookies
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH','OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['set-cookie']
 };
@@ -65,7 +65,7 @@ const PORT = process.env.PORT || 5000;
 
 connectdb()
   .then(() => {
-    console.log("✅ Database connected");
+    console.log(" Database connected");
     app.listen(PORT, () => console.log("🚀 Server running on port", PORT));
   })
-  .catch((err) => console.log("❌ Database error:", err));
+  .catch((err) => console.log("  Database error:", err));

@@ -34,7 +34,7 @@ const OrderDetailsPage = () => {
         const storedUser = sessionStorage.getItem("user");
         console.log("Raw stored user:", storedUser);
         console.log("SessionStorage keys:", Object.keys(sessionStorage));
-        
+
         if (!storedUser || storedUser === 'undefined' || storedUser === 'null') {
           console.log("No user found in session storage");
           setError("Please login to view order details.");
@@ -106,17 +106,17 @@ const OrderDetailsPage = () => {
         console.log("Auto-refreshing order status...");
         const response = await axios.get(`/order/${orderId}`);
         const updatedOrder = response.data;
-        
+
         // Check if order status or any items changed
         const statusChanged = order.orderStatus !== updatedOrder.orderStatus;
         const itemsChanged = JSON.stringify(order.items) !== JSON.stringify(updatedOrder.items);
         const paymentChanged = order.paymentStatus !== updatedOrder.paymentStatus;
-        
+
         if (statusChanged || itemsChanged || paymentChanged) {
           console.log("Order update detected!");
           setPreviousOrderStatus(order.orderStatus);
           setOrder(updatedOrder);
-          
+
           // Trigger blink effect for 10 seconds
           setIsBlinking(true);
           setTimeout(() => {
@@ -171,7 +171,7 @@ const OrderDetailsPage = () => {
     const total = subtotal + tax + delivery;
     return { subtotal, tax, delivery, total };
   }, [order]);
-  
+
   const canBeCancelled = order && !['completed', 'shipped', 'delivered', 'cancelled'].includes(order.orderStatus);
 
   if (loading) {
@@ -260,7 +260,7 @@ const OrderDetailsPage = () => {
       <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
         <div className="container mx-auto px-4 py-8">
           <div className={`mb-6 p-4 rounded-lg border ${darkMode ? 'bg-green-900 border-green-700 text-green-200' : 'bg-green-50 border-green-200 text-green-700'}`}>
-            <h3 className="text-sm font-semibold mb-2">✅ Customer Order Details Access Granted:</h3>
+            <h3 className="text-sm font-semibold mb-2"> Customer Order Details Access Granted:</h3>
             <p className="text-xs">User Role: {userRole || "customer/default"}</p>
             <p className="text-xs">User ID: {userId}</p>
             <p className="text-xs">Order ID: {orderId}</p>
@@ -298,7 +298,7 @@ const OrderDetailsPage = () => {
         )}
 
         <div className={`mb-6 p-4 rounded-lg border ${darkMode ? 'bg-green-900 border-green-700 text-green-200' : 'bg-green-50 border-green-200 text-green-700'}`}>
-          <h3 className="text-sm font-semibold mb-2">✅ Customer Order Details Access Granted:</h3>
+          <h3 className="text-sm font-semibold mb-2"> Customer Order Details Access Granted:</h3>
           <p className="text-xs">User Role: {userRole || "customer/default"}</p>
           <p className="text-xs">User ID: {userId}</p>
           <p className="text-xs">Order ID: {orderId}</p>
@@ -319,15 +319,15 @@ const OrderDetailsPage = () => {
               <p className={`text-sm font-mono ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>ID: {order._id}</p>
             </div>
             <div className="text-left md:text-right mt-4 md:mt-0">
-                <p className="font-semibold">Status: <span className={`font-normal ${isBlinking ? 'animate-pulse text-yellow-500 font-bold' : ''}`}>{order.orderStatus}</span></p>
-                <p className="font-semibold">Date: <span className="font-normal">{new Date(order.createdAt).toLocaleDateString()}</span></p>
+              <p className="font-semibold">Status: <span className={`font-normal ${isBlinking ? 'animate-pulse text-yellow-500 font-bold' : ''}`}>{order.orderStatus}</span></p>
+              <p className="font-semibold">Date: <span className="font-normal">{new Date(order.createdAt).toLocaleDateString()}</span></p>
             </div>
           </div>
-          
+
           <div className="space-y-4 mb-6">
             <h2 className="text-xl font-semibold mb-2">Items</h2>
             {order.items.map((item, index) => {
-              const product = item.productId; 
+              const product = item.productId;
               return (
                 <div key={index} className={`flex justify-between items-center p-2 rounded-md ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
                   <div className="flex items-center gap-4">
@@ -354,24 +354,24 @@ const OrderDetailsPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <h2 className="text-xl font-semibold mb-2">User Details</h2>
-                <p><strong>Name:</strong> {order.userId.name}</p>
-                <p><strong>Email:</strong> {order.userId.email}</p>
+              <h2 className="text-xl font-semibold mb-2">User Details</h2>
+              <p><strong>Name:</strong> {order.userId.name}</p>
+              <p><strong>Email:</strong> {order.userId.email}</p>
             </div>
             <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <h2 className="text-xl font-semibold mb-4">Order Total</h2>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span>Subtotal</span><span>₹{totals.subtotal.toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span>Taxes (5%)</span><span>₹{totals.tax.toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span>Delivery Fee</span><span>₹{totals.delivery.toFixed(2)}</span></div>
-                  <div className={`flex justify-between text-lg font-bold border-t pt-3 mt-3 ${darkMode ? 'border-gray-600' : ''}`}>
-                    <span>Total</span>
-                    <span>₹{totals.total.toFixed(2)}</span>
-                  </div>
+              <h2 className="text-xl font-semibold mb-4">Order Total</h2>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between"><span>Subtotal</span><span>₹{totals.subtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>Taxes (5%)</span><span>₹{totals.tax.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>Delivery Fee</span><span>₹{totals.delivery.toFixed(2)}</span></div>
+                <div className={`flex justify-between text-lg font-bold border-t pt-3 mt-3 ${darkMode ? 'border-gray-600' : ''}`}>
+                  <span>Total</span>
+                  <span>₹{totals.total.to(2)}</span>
                 </div>
+              </div>
             </div>
           </div>
-          
+
           {canBeCancelled && (
             <div className={`mt-6 border-t pt-6 ${darkMode ? 'border-gray-700' : ''}`}>
               <button

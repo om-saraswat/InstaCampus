@@ -8,37 +8,37 @@ import api from "../../../lib/axios";
 
 const ProductPage = () => {
   const { darkMode } = useTheme();
-  
+
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
-  
+
   useEffect(() => {
     const handleThemeChange = () => {
       setMounted(prev => !prev);
     };
-    
+
     window.addEventListener('storage', handleThemeChange);
-    
+
     const originalSetItem = localStorage.setItem;
-    localStorage.setItem = function(key, value) {
+    localStorage.setItem = function (key, value) {
       const result = originalSetItem.apply(this, arguments);
       if (key === 'theme') {
         setTimeout(handleThemeChange, 0);
       }
       return result;
     };
-    
+
     return () => {
       window.removeEventListener('storage', handleThemeChange);
       localStorage.setItem = originalSetItem;
     };
   }, []);
-  
+
   const [localStorageTheme, setLocalStorageTheme] = useState(false);
-  
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const theme = localStorage.getItem('theme');
@@ -46,14 +46,14 @@ const ProductPage = () => {
       setLocalStorageTheme(isDark);
     }
   }, [mounted]);
-  
+
   const effectiveDarkMode = darkMode ?? localStorageTheme;
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [vendorId, setVendorId] = useState(null);
   const [error, setError] = useState(null);
 
-  // ✅ Helper function to create image URL from base64
+  //  Helper function to create image URL from base64
   const getImageUrl = (product) => {
     if (product.imageBase64 && product.imageContentType) {
       return `data:${product.imageContentType};base64,${product.imageBase64}`;
@@ -66,7 +66,7 @@ const ProductPage = () => {
       try {
         const storedUser = sessionStorage.getItem("user");
         console.log("Raw stored user:", storedUser);
-        
+
         const user = storedUser ? JSON.parse(storedUser) : null;
         console.log("Parsed user:", user);
 
@@ -85,7 +85,7 @@ const ProductPage = () => {
         console.log("Response data:", response.data);
 
         let productList = [];
-        
+
         if (response.data) {
           if (Array.isArray(response.data)) {
             productList = response.data;
@@ -105,7 +105,7 @@ const ProductPage = () => {
         console.log("Final products to set:", finalProducts);
 
         setProducts(finalProducts);
-        
+
         if (finalProducts.length === 0) {
           console.log("No products found for this vendor");
         }
@@ -114,7 +114,7 @@ const ProductPage = () => {
         console.error("Error fetching products:", err);
         console.error("Error message:", err.message);
         console.error("Error response:", err.response);
-        
+
         // Only set error if it's not a user authentication issue
         if (err.response?.status === 401 || err.response?.status === 403) {
           setError("Please login to view your products.");
@@ -200,7 +200,7 @@ const ProductPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => {
               const imageUrl = getImageUrl(product);
-              
+
               return (
                 <Link
                   key={product._id}
@@ -248,15 +248,14 @@ const ProductPage = () => {
                         ₹{product.price || '0.00'}
                       </p>
                       {product.stock !== undefined && (
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          product.stock > 0 
-                            ? darkMode 
-                              ? 'bg-green-900/30 text-green-400' 
+                        <span className={`text-xs px-2 py-1 rounded-full ${product.stock > 0
+                            ? darkMode
+                              ? 'bg-green-900/30 text-green-400'
                               : 'bg-green-100 text-green-800'
-                            : darkMode 
-                              ? 'bg-red-900/30 text-red-400' 
+                            : darkMode
+                              ? 'bg-red-900/30 text-red-400'
                               : 'bg-red-100 text-red-800'
-                        }`}>
+                          }`}>
                           {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
                         </span>
                       )}
